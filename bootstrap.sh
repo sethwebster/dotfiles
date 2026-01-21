@@ -115,13 +115,17 @@ else
     log_success "mas already installed"
 fi
 
-# Verify App Store sign-in
+# Verify App Store sign-in (mas account can be unreliable)
 if ! mas account &> /dev/null; then
-    log_warning "Not signed into Mac App Store"
-    log_warning "Please sign in via System Settings > Apple ID"
-    log_warning "App Store apps will be skipped"
+    log_warning "Cannot verify Mac App Store sign-in status"
+    log_warning "If you see 'mas' errors below, sign in via:"
+    log_warning "  System Settings > Media & Purchases > Sign In"
     echo ""
-    read -p "Press Enter to continue..." -r
+    read -p "Are you signed into the App Store? (y/N) " -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log_warning "App Store apps (Things 3, Amphetamine) will be skipped"
+    fi
 fi
 
 # Install from Brewfile
