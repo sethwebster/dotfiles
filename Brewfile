@@ -59,7 +59,7 @@ cask "raycast"          # Spotlight replacement
 cask "alfred"           # Alternative launcher
 cask "obsidian"         # Note-taking
 cask "bear"             # Note-taking
-cask "things3"          # Task management
+# Note: Things 3 not available via Homebrew - install from Mac App Store
 cask "fantastical"      # Calendar
 
 # Communication
