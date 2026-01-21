@@ -133,7 +133,7 @@ if [ -f "${DOTFILES_DIR}/Brewfile" ]; then
     log_info "Installing apps and tools from Brewfile (this may take several minutes)..."
     log_info "Homebrew will show progress for each app..."
     echo ""
-    brew bundle --file="${DOTFILES_DIR}/Brewfile" --no-lock
+    brew bundle --file="${DOTFILES_DIR}/Brewfile"
     echo ""
     log_success "Brewfile installed"
 else
