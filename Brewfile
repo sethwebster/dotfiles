@@ -18,7 +18,6 @@ brew "bat"              # Better cat
 brew "eza"              # Better ls
 brew "zoxide"           # Smart cd
 brew "tldr"             # Simplified man pages
-brew "ngrok"            # Tunneling
 brew "postgresql@15"    # PostgreSQL client
 
 # Development
@@ -71,6 +70,7 @@ cask "1password"
 cask "rectangle"        # Window management
 cask "multipass"        # VM management
 cask "cleanshot"        # Screenshot tool
+cask "ngrok"            # Tunneling
 cask "the-unarchiver"   # Archive extraction
 cask "dropbox"          # Cloud storage
 cask "cyberduck"        # FTP/SFTP client
