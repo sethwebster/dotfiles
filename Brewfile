@@ -80,7 +80,7 @@ cask "dropbox"          # Cloud storage
 cask "cyberduck"        # FTP/SFTP client
 cask "istat-menus"      # System monitor
 cask "daisydisk"        # Disk usage analyzer
-cask "amphetamine"      # Keep Mac awake
+# Note: Amphetamine is Mac App Store only
 
 # Creative Tools
 cask "figma"            # Design
