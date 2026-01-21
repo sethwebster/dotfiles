@@ -69,20 +69,25 @@ brew bundle dump --file="$TEMP_BREWFILE" --force
 # Show diff if Brewfile exists
 if [ -f "${DOTFILES_DIR}/Brewfile" ]; then
     echo ""
-    log_info "Changes detected:"
-    if diff -u "${DOTFILES_DIR}/Brewfile" "$TEMP_BREWFILE" || true; then
-        log_success "No changes to Brewfile"
-    fi
-    echo ""
 
-    read -p "Update Brewfile with these changes? (y/N) " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        mv "$TEMP_BREWFILE" "${DOTFILES_DIR}/Brewfile"
-        log_success "Brewfile updated"
-    else
+    # Check if files are different
+    if cmp -s "${DOTFILES_DIR}/Brewfile" "$TEMP_BREWFILE"; then
+        log_success "No changes to Brewfile"
         rm -f "$TEMP_BREWFILE"
-        log_info "Brewfile unchanged"
+    else
+        log_info "Changes detected:"
+        diff -u "${DOTFILES_DIR}/Brewfile" "$TEMP_BREWFILE" || true
+        echo ""
+
+        read -p "Update Brewfile with these changes? (y/N) " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            mv "$TEMP_BREWFILE" "${DOTFILES_DIR}/Brewfile"
+            log_success "Brewfile updated"
+        else
+            rm -f "$TEMP_BREWFILE"
+            log_info "Brewfile unchanged"
+        fi
     fi
 else
     # No existing Brewfile, just create it
@@ -96,8 +101,12 @@ if command -v asdf &> /dev/null; then
 
     # Get current global versions
     if [ -f ~/.tool-versions ]; then
-        cp ~/.tool-versions "${DOTFILES_DIR}/.tool-versions"
-        log_success ".tool-versions updated"
+        if ! cmp -s ~/.tool-versions "${DOTFILES_DIR}/.tool-versions"; then
+            cp ~/.tool-versions "${DOTFILES_DIR}/.tool-versions"
+            log_success ".tool-versions updated"
+        else
+            log_success ".tool-versions already up to date"
+        fi
     else
         log_warning "No ~/.tool-versions found, skipping"
     fi
