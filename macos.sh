@@ -7,6 +7,7 @@ set -euo pipefail
 # Colors for output
 BLUE='\033[0;34m'
 GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
 NC='\033[0m'
 
 log_info() {
@@ -15,6 +16,10 @@ log_info() {
 
 log_success() {
     echo -e "${GREEN}✓${NC} $1"
+}
+
+log_warning() {
+    echo -e "${YELLOW}!${NC} $1"
 }
 
 echo ""
