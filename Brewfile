@@ -3,6 +3,7 @@
 # Taps
 tap "homebrew/bundle"
 tap "homebrew/cask-fonts"
+tap "AlexanderWillner/tap"
 
 # CLI Tools
 brew "git"
@@ -60,7 +61,7 @@ cask "alfred"           # Alternative launcher
 cask "obsidian"         # Note-taking
 cask "bear"             # Note-taking
 # Note: Things 3 app from Mac App Store, but CLI available via Homebrew
-# brew "things-cli"     # Uncomment if you have Things 3 and want CLI access
+brew "things.sh"        # Things 3 CLI automation
 cask "fantastical"      # Calendar
 
 # Communication
@@ -79,7 +80,7 @@ cask "the-unarchiver"   # Archive extraction
 cask "dropbox"          # Cloud storage
 cask "cyberduck"        # FTP/SFTP client
 cask "istat-menus"      # System monitor
-cask "daisy-disk"       # Disk usage analyzer
+cask "daisydisk"        # Disk usage analyzer
 cask "amphetamine"      # Keep Mac awake
 
 # Creative Tools
