@@ -9,6 +9,7 @@ brew "git"
 brew "gh"               # GitHub CLI
 brew "asdf"             # Version manager
 brew "mackup"           # App settings sync
+brew "mas"              # Mac App Store CLI
 brew "wget"
 brew "curl"
 brew "jq"               # JSON processor
@@ -59,8 +60,6 @@ cask "raycast"          # Spotlight replacement
 cask "alfred"           # Alternative launcher
 cask "obsidian"         # Note-taking
 cask "bear"             # Note-taking
-# Note: Things 3 app from Mac App Store
-# Things CLI: brew tap AlexanderWillner/tap && brew install things.sh
 cask "fantastical"      # Calendar
 
 # Communication
@@ -80,7 +79,6 @@ cask "dropbox"          # Cloud storage
 cask "cyberduck"        # FTP/SFTP client
 cask "istat-menus"      # System monitor
 cask "daisydisk"        # Disk usage analyzer
-# Note: Amphetamine is Mac App Store only
 
 # Creative Tools
 cask "figma"            # Design
@@ -94,3 +92,7 @@ cask "vlc"
 cask "font-fira-code"
 cask "font-jetbrains-mono"
 cask "font-cascadia-code"
+
+# Mac App Store Apps (via mas CLI)
+mas "Things 3", id: 904280696
+mas "Amphetamine", id: 937984704
