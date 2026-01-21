@@ -28,6 +28,7 @@ files=(
     "path.zsh"
     "aliases.zsh"
     "functions.zsh"
+    "check-updates.zsh"
 )
 
 # Create symlinks

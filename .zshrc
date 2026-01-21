@@ -17,6 +17,7 @@ fi
 [ -f "$DOTFILES/path.zsh" ] && source "$DOTFILES/path.zsh"
 [ -f "$DOTFILES/aliases.zsh" ] && source "$DOTFILES/aliases.zsh"
 [ -f "$DOTFILES/functions.zsh" ] && source "$DOTFILES/functions.zsh"
+[ -f "$DOTFILES/check-updates.zsh" ] && source "$DOTFILES/check-updates.zsh"
 
 # asdf (check if brew exists first)
 if command -v brew &>/dev/null; then

@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- **Automatic Update Checking**
+  - Checks for dotfiles updates once per day on shell startup
+  - Non-blocking background check
+  - Shows notification if updates available
+  - Never auto-updates without user permission
+  - Can be disabled with `DOTFILES_SKIP_UPDATE_CHECK=1`
+
 ## [2026-01-21] - Major Security & Architecture Update
 
 ### Added

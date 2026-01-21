@@ -188,9 +188,46 @@ rm ~/.macos-defaults-applied
 ./bootstrap.sh
 ```
 
-## Updating
+## Automatic Update Checking
+
+Your dotfiles automatically check for updates **once per day** when you open a new terminal.
+
+**How it works:**
+- Checks GitHub for new commits (non-blocking, runs in background)
+- Shows a notification if updates available
+- Never auto-updates (you control when to pull)
+
+**Update notification:**
+```
+╔═══════════════════════════════════════════════════════════╗
+║  📦 Dotfiles Update Available                             ║
+╚═══════════════════════════════════════════════════════════╝
+
+  New updates are available for your dotfiles!
+
+  To update, run:
+    dotfiles-update
+```
+
+**To disable automatic checking:**
+```bash
+# Add to ~/.zshrc.local (not tracked in git)
+DOTFILES_SKIP_UPDATE_CHECK=1
+```
+
+**To force a check now:**
+```bash
+rm ~/dotfiles/.last-update-check
+source ~/.zshrc
+```
+
+## Updating Manually
 
 ```bash
+# Easy way (updates dotfiles + Homebrew)
+dotfiles-update
+
+# Or manually
 cd ~/dotfiles
 git pull
 ./install.sh  # Re-symlink any new files
