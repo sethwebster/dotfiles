@@ -97,18 +97,44 @@ fi
 
 # Update .tool-versions from current asdf versions
 if command -v asdf &> /dev/null; then
-    log_info "Updating .tool-versions from current asdf installations..."
+    log_info "Capturing all asdf plugin versions..."
 
-    # Get current global versions
-    if [ -f ~/.tool-versions ]; then
-        if ! cmp -s ~/.tool-versions "${DOTFILES_DIR}/.tool-versions"; then
-            cp ~/.tool-versions "${DOTFILES_DIR}/.tool-versions"
-            log_success ".tool-versions updated"
+    TEMP_TOOL_VERSIONS=$(mktemp)
+    echo "# asdf version specifications" > "$TEMP_TOOL_VERSIONS"
+
+    # Get all installed plugins and their versions
+    while IFS= read -r plugin; do
+        # Get all installed versions for this plugin
+        versions=$(asdf list "$plugin" 2>/dev/null | grep -v "No versions installed" || true)
+
+        if [ -n "$versions" ]; then
+            # Get the current/latest version (strip leading spaces/asterisks)
+            current_version=$(echo "$versions" | tail -1 | sed 's/^[* ]*//')
+
+            if [ -n "$current_version" ]; then
+                echo "$plugin $current_version" >> "$TEMP_TOOL_VERSIONS"
+                log_info "  Found $plugin $current_version"
+            fi
+        fi
+    done < <(asdf plugin list)
+
+    # Compare and update if different
+    if [ -f "${DOTFILES_DIR}/.tool-versions" ]; then
+        if ! cmp -s "${DOTFILES_DIR}/.tool-versions" "$TEMP_TOOL_VERSIONS"; then
+            echo ""
+            log_info "Changes to .tool-versions:"
+            diff -u "${DOTFILES_DIR}/.tool-versions" "$TEMP_TOOL_VERSIONS" || true
+            echo ""
+
+            mv "$TEMP_TOOL_VERSIONS" "${DOTFILES_DIR}/.tool-versions"
+            log_success ".tool-versions updated with all installed plugins"
         else
+            rm -f "$TEMP_TOOL_VERSIONS"
             log_success ".tool-versions already up to date"
         fi
     else
-        log_warning "No ~/.tool-versions found, skipping"
+        mv "$TEMP_TOOL_VERSIONS" "${DOTFILES_DIR}/.tool-versions"
+        log_success ".tool-versions created with all installed plugins"
     fi
 fi
 
