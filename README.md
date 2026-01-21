@@ -17,7 +17,7 @@ Complete macOS setup automation. One script to rule them all.
 
 ```bash
 # Clone this repo
-git clone https://github.com/yourusername/dotfiles.git ~/dotfiles
+git clone https://github.com/sethwebster/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 
 # Make scripts executable
