@@ -236,9 +236,11 @@ if [ -f "${DOTFILES_DIR}/Brewfile" ]; then
     echo ""
     log_info "Starting Homebrew installations (verbose mode - you'll see everything)..."
     log_warning "Initial phase: Homebrew may check package info for 1-2 minutes before installations start"
+    log_warning "Large downloads may take several minutes each (be patient during 'Verifying' phase)"
     echo ""
 
     # Use --no-upgrade to skip already-installed apps, --verbose to show progress immediately
+    # Note: brew bundle can hang on parallel downloads. If stuck for >5min, Ctrl+C and re-run
     brew bundle --file="$TEMP_BREWFILE" --no-upgrade --verbose
 
     echo ""
