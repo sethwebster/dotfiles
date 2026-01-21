@@ -59,7 +59,8 @@ cask "raycast"          # Spotlight replacement
 cask "alfred"           # Alternative launcher
 cask "obsidian"         # Note-taking
 cask "bear"             # Note-taking
-# Note: Things 3 not available via Homebrew - install from Mac App Store
+# Note: Things 3 app from Mac App Store, but CLI available via Homebrew
+# brew "things-cli"     # Uncomment if you have Things 3 and want CLI access
 cask "fantastical"      # Calendar
 
 # Communication
