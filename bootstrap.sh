@@ -43,6 +43,14 @@ echo ""
 GIT_NAME=$(git config --global user.name 2>/dev/null || echo "")
 GIT_EMAIL=$(git config --global user.email 2>/dev/null || echo "")
 
+# Debug: Show what we found
+if [ -n "$GIT_NAME" ]; then
+    log_info "Found existing git name: $GIT_NAME"
+fi
+if [ -n "$GIT_EMAIL" ]; then
+    log_info "Found existing git email: $GIT_EMAIL"
+fi
+
 if [ -z "${GIT_NAME}" ] || [ -z "${GIT_EMAIL}" ]; then
     # Only show collection message if we actually need info
     log_info "First, let's collect some information..."
@@ -392,14 +400,18 @@ if [ -n "${GIT_NAME:-}" ]; then
     current_name=$(git config --global user.name 2>/dev/null || echo "")
     if [ "$current_name" != "$GIT_NAME" ]; then
         git config --global user.name "$GIT_NAME"
-        log_info "Set git user.name to: $GIT_NAME"
+        log_success "Set git user.name to: $GIT_NAME"
+    else
+        log_success "git user.name already correct: $GIT_NAME"
     fi
 fi
 if [ -n "${GIT_EMAIL:-}" ]; then
     current_email=$(git config --global user.email 2>/dev/null || echo "")
     if [ "$current_email" != "$GIT_EMAIL" ]; then
         git config --global user.email "$GIT_EMAIL"
-        log_info "Set git user.email to: $GIT_EMAIL"
+        log_success "Set git user.email to: $GIT_EMAIL"
+    else
+        log_success "git user.email already correct: $GIT_EMAIL"
     fi
 fi
 
