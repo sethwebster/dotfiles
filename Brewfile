@@ -59,7 +59,7 @@ cask "raycast"          # Spotlight replacement
 cask "alfred"           # Alternative launcher
 cask "obsidian"         # Note-taking
 cask "bear"             # Note-taking
-cask "things"           # Task management
+cask "things3"          # Task management
 cask "fantastical"      # Calendar
 
 # Communication
