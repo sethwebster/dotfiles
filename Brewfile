@@ -1,8 +1,5 @@
 # Seth's Brewfile - Homebrew packages and applications
-
-# Taps
-tap "homebrew/bundle"
-tap "homebrew/cask-fonts"
+# Note: homebrew/bundle and homebrew/cask-fonts are now in core Homebrew
 
 # CLI Tools
 brew "git"
