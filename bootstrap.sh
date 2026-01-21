@@ -88,6 +88,13 @@ if ! xcode-select -p &> /dev/null; then
     exit 0
 else
     log_success "Xcode Command Line Tools installed"
+
+    # Accept Xcode license if needed
+    if ! sudo xcodebuild -license check &> /dev/null; then
+        log_info "Accepting Xcode license agreement..."
+        sudo xcodebuild -license accept
+        log_success "Xcode license accepted"
+    fi
 fi
 
 # Install Homebrew
@@ -380,12 +387,20 @@ fi
 # Setup Git
 log_info "Configuring Git..."
 
-# Set user name and email
+# Set user name and email (only if we have values and they're not already set correctly)
 if [ -n "${GIT_NAME:-}" ]; then
-    git config --global user.name "$GIT_NAME"
+    current_name=$(git config --global user.name 2>/dev/null || echo "")
+    if [ "$current_name" != "$GIT_NAME" ]; then
+        git config --global user.name "$GIT_NAME"
+        log_info "Set git user.name to: $GIT_NAME"
+    fi
 fi
 if [ -n "${GIT_EMAIL:-}" ]; then
-    git config --global user.email "$GIT_EMAIL"
+    current_email=$(git config --global user.email 2>/dev/null || echo "")
+    if [ "$current_email" != "$GIT_EMAIL" ]; then
+        git config --global user.email "$GIT_EMAIL"
+        log_info "Set git user.email to: $GIT_EMAIL"
+    fi
 fi
 
 # Include dotfiles gitconfig (do not symlink, use include directive)
