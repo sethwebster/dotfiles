@@ -130,10 +130,97 @@ fi
 
 # Install from Brewfile
 if [ -f "${DOTFILES_DIR}/Brewfile" ]; then
+    log_info "Checking which apps are already installed..."
+
+    # Create temporary filtered Brewfile excluding manually-installed casks
+    TEMP_BREWFILE=$(mktemp)
+
+    # Copy Brewfile, filtering out casks where app already exists
+    while IFS= read -r line; do
+        # Check if line is a cask declaration
+        if [[ "$line" =~ ^cask[[:space:]]+\"([^\"]+)\" ]]; then
+            cask_name="${BASH_REMATCH[1]}"
+
+            # Map cask name to app name (what appears in /Applications)
+            case "$cask_name" in
+                docker) app_name="Docker" ;;
+                cursor) app_name="Cursor" ;;
+                visual-studio-code) app_name="Visual Studio Code" ;;
+                google-chrome) app_name="Google Chrome" ;;
+                arc) app_name="Arc" ;;
+                firefox) app_name="Firefox" ;;
+                brave-browser) app_name="Brave Browser" ;;
+                claude-code) app_name="Claude Code" ;;
+                claude) app_name="Claude" ;;
+                chatgpt) app_name="ChatGPT" ;;
+                slack) app_name="Slack" ;;
+                discord) app_name="Discord" ;;
+                notion) app_name="Notion" ;;
+                zoom) app_name="zoom.us" ;;
+                raycast) app_name="Raycast" ;;
+                alfred) app_name="Alfred 5" ;;
+                obsidian) app_name="Obsidian" ;;
+                bear) app_name="Bear" ;;
+                fantastical) app_name="Fantastical" ;;
+                signal) app_name="Signal" ;;
+                whatsapp) app_name="WhatsApp" ;;
+                beeper) app_name="Beeper Desktop" ;;
+                1password) app_name="1Password" ;;
+                rectangle) app_name="Rectangle" ;;
+                multipass) app_name="Multipass" ;;
+                cleanshot) app_name="CleanShot X" ;;
+                ngrok) app_name="ngrok" ;;
+                the-unarchiver) app_name="The Unarchiver" ;;
+                dropbox) app_name="Dropbox" ;;
+                cyberduck) app_name="Cyberduck" ;;
+                istat-menus) app_name="iStat Menus" ;;
+                daisydisk) app_name="DaisyDisk" ;;
+                figma) app_name="Figma" ;;
+                blender) app_name="Blender" ;;
+                spotify) app_name="Spotify" ;;
+                vlc) app_name="VLC" ;;
+                iterm2) app_name="iTerm" ;;
+                warp) app_name="Warp" ;;
+                postman) app_name="Postman" ;;
+                pgadmin4) app_name="pgAdmin 4" ;;
+                expo-orbit) app_name="Expo Orbit" ;;
+                *) app_name="" ;;
+            esac
+
+            # Check if app already exists in /Applications
+            if [ -n "$app_name" ]; then
+                if [ -d "/Applications/${app_name}.app" ]; then
+                    log_warning "Skipping $cask_name (already installed)"
+                    echo "# Skipped: $line" >> "$TEMP_BREWFILE"
+                    continue
+                fi
+            fi
+        fi
+        echo "$line" >> "$TEMP_BREWFILE"
+    done < "${DOTFILES_DIR}/Brewfile"
+
     log_info "Installing apps and tools from Brewfile (this may take several minutes)..."
     log_info "Homebrew will show progress for each app..."
+    log_info "You may be prompted for your password once..."
     echo ""
-    brew bundle --file="${DOTFILES_DIR}/Brewfile"
+
+    # Refresh sudo timestamp to avoid multiple password prompts
+    sudo -v
+
+    # Keep sudo alive in background during long install
+    (while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null) &
+    SUDO_KEEPALIVE_PID=$!
+
+    # Use --no-upgrade to skip already-installed apps
+    brew bundle --file="$TEMP_BREWFILE" --no-upgrade
+
+    # Kill sudo keepalive
+    kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
+    wait "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
+
+    # Clean up
+    rm -f "$TEMP_BREWFILE"
+
     echo ""
     log_success "Brewfile installed"
 else
@@ -262,13 +349,23 @@ log_info "Bootstrap complete! Next steps:"
 log_info "========================================"
 echo ""
 log_warning "Manual authentication required:"
-echo "  1. Run: gh auth login"
-echo "  2. Run: npx expo login"
+echo "  1. gh auth login"
+echo "  2. npx expo login"
 echo "  3. Sign into Apple ID in System Settings"
 echo "  4. Sign into Creative Cloud"
 echo "  5. Wait for iCloud to sync, then run: mackup restore"
 echo "  6. Restart your terminal or run: source ~/.zshrc"
 echo ""
-log_info "Run './auth-setup.sh' for guided authentication"
-echo ""
 log_success "All done! Enjoy your new Mac 🎉"
+echo ""
+
+# Offer to run auth-setup
+if [ -f "${DOTFILES_DIR}/auth-setup.sh" ]; then
+    read -p "Run guided authentication setup now? (y/N) " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        bash "${DOTFILES_DIR}/auth-setup.sh"
+    else
+        log_info "You can run authentication setup later with: ./auth-setup.sh"
+    fi
+fi

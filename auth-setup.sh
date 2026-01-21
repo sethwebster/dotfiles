@@ -84,7 +84,19 @@ if [ -f ~/.ssh/id_ed25519.pub ]; then
     echo "Your public key:"
     cat ~/.ssh/id_ed25519.pub
     echo ""
-    log_info "Add this to GitHub: https://github.com/settings/keys"
+
+    # Offer to upload existing key to GitHub
+    if command -v gh &> /dev/null && gh auth status &> /dev/null; then
+        read -p "Upload SSH key to GitHub? (y/n) " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            read -p "Enter title for this key (e.g., 'MacBook Pro'): " key_title
+            gh ssh-key add ~/.ssh/id_ed25519.pub --title "$key_title"
+            log_success "SSH key uploaded to GitHub"
+        fi
+    else
+        log_info "Add this to GitHub manually: https://github.com/settings/keys"
+    fi
 else
     read -p "Generate new SSH key? (y/n) " -n 1 -r
     echo ""
@@ -98,7 +110,19 @@ else
         echo "Your public key:"
         cat ~/.ssh/id_ed25519.pub
         echo ""
-        log_info "Add this to GitHub: https://github.com/settings/keys"
+
+        # Auto-upload to GitHub if authenticated
+        if command -v gh &> /dev/null && gh auth status &> /dev/null; then
+            read -p "Upload SSH key to GitHub? (y/n) " -n 1 -r
+            echo ""
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                read -p "Enter title for this key (e.g., 'MacBook Pro'): " key_title
+                gh ssh-key add ~/.ssh/id_ed25519.pub --title "$key_title"
+                log_success "SSH key uploaded to GitHub"
+            fi
+        else
+            log_info "Add this to GitHub manually: https://github.com/settings/keys"
+        fi
     fi
 fi
 
