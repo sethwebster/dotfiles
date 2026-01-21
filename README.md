@@ -105,6 +105,46 @@ No more hunting through READMEs wondering what you forgot.
 
 ---
 
+## 🔄 Cloning Your Mac to a New Machine
+
+### On Your Current Mac (Sending Mode)
+
+Before setting up a new Mac, capture your current system state:
+
+```bash
+cd ~/dotfiles
+./prepare-sync.sh
+```
+
+**This script:**
+1. ✅ Regenerates `Brewfile` from currently installed apps
+2. ✅ Updates `.tool-versions` from current asdf installations
+3. ✅ Runs `mackup backup` to sync app settings to iCloud
+4. ✅ Shows diff of changes before updating
+5. ✅ Commits and pushes changes to GitHub
+
+**Result:** Your dotfiles repo now perfectly reflects your current Mac's state.
+
+### On Your New Mac (Receiving Mode)
+
+Then on the new Mac, just run bootstrap:
+
+```bash
+git clone https://github.com/sethwebster/dotfiles.git ~/dotfiles
+cd ~/dotfiles
+./bootstrap.sh
+```
+
+The new Mac will automatically receive:
+- 📦 All apps from the updated Brewfile
+- 🔧 Tool versions from .tool-versions
+- ⚙️ App settings via `mackup restore` (from iCloud)
+- 🎨 Shell configuration and aliases
+
+**Perfect clone.** Every time.
+
+---
+
 ## 🚀 Quickstart
 
 <table>
@@ -260,6 +300,7 @@ dotfiles/
 ├── 🚀 bootstrap.sh          # Main orchestrator (intelligent app detection)
 ├── 🔗 install.sh             # Symlink manager (idempotent)
 ├── 🔐 auth-setup.sh          # Guided authentication setup
+├── 🔄 prepare-sync.sh        # Sending mode (capture current state)
 ├── 🎨 macos.sh               # System preferences automation
 ├── 📦 Brewfile               # All Homebrew packages/casks
 ├── 🐳 docker-compose.yml     # PostgreSQL & Redis for dev
