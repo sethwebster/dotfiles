@@ -39,9 +39,30 @@ echo ""
 log_info "Starting Mac bootstrap from ${DOTFILES_DIR}"
 echo ""
 
-# Check if we already have git config
-GIT_NAME=$(git config --global user.name 2>/dev/null || echo "")
-GIT_EMAIL=$(git config --global user.email 2>/dev/null || echo "")
+# ==============================================================================
+# GIT CONFIGURATION (MUST happen early, before any potentially failing commands)
+# ==============================================================================
+#
+# Why here? With set -e, if brew/asdf/etc fails later, script exits immediately.
+# Git config at the end of the script = never written if anything fails first.
+# Solution: Write config IMMEDIATELY after collecting it.
+#
+# Why check for git binary? On fresh Mac, git doesn't exist until Xcode CLT installed.
+# If git unavailable, we still collect info and write it later (after Xcode).
+# ==============================================================================
+
+GIT_AVAILABLE=false
+if command -v git &> /dev/null; then
+    GIT_AVAILABLE=true
+fi
+
+# Check existing config (only if git available)
+GIT_NAME=""
+GIT_EMAIL=""
+if [ "$GIT_AVAILABLE" = true ]; then
+    GIT_NAME=$(git config --global user.name 2>/dev/null || echo "")
+    GIT_EMAIL=$(git config --global user.email 2>/dev/null || echo "")
+fi
 
 # Debug: Show what we found
 if [ -n "$GIT_NAME" ]; then
@@ -51,20 +72,20 @@ if [ -n "$GIT_EMAIL" ]; then
     log_info "Found existing git email: $GIT_EMAIL"
 fi
 
+# Collect git info if needed
 if [ -z "${GIT_NAME}" ] || [ -z "${GIT_EMAIL}" ]; then
-    # Only show collection message if we actually need info
     log_info "First, let's collect some information..."
     log_info "(Required for Git commits - stored in ~/.gitconfig)"
     echo ""
     log_warning "Git user information not configured"
 
-    if [ -z "${GIT_NAME:-}" ]; then
+    if [ -z "${GIT_NAME}" ]; then
         read -p "Enter your full name (for Git commits): " GIT_NAME
     else
         log_success "Using existing Git name: $GIT_NAME"
     fi
 
-    if [ -z "${GIT_EMAIL:-}" ]; then
+    if [ -z "${GIT_EMAIL}" ]; then
         read -p "Enter your email (for Git commits): " GIT_EMAIL
     else
         log_success "Using existing Git email: $GIT_EMAIL"
@@ -73,6 +94,47 @@ if [ -z "${GIT_NAME}" ] || [ -z "${GIT_EMAIL}" ]; then
     echo ""
 else
     log_success "Git already configured: $GIT_NAME <$GIT_EMAIL>"
+    echo ""
+fi
+
+# CRITICAL: Write git config IMMEDIATELY if git is available
+# This ensures config persists even if script fails later
+if [ "$GIT_AVAILABLE" = true ] && [ -n "$GIT_NAME" ] && [ -n "$GIT_EMAIL" ]; then
+    # Create ~/.gitconfig if it doesn't exist
+    if [ ! -f ~/.gitconfig ]; then
+        touch ~/.gitconfig
+        log_info "Created ~/.gitconfig"
+    fi
+
+    # Write user.name if not already correct
+    current_name=$(git config --global user.name 2>/dev/null || echo "")
+    if [ "$current_name" != "$GIT_NAME" ]; then
+        git config --global user.name "$GIT_NAME"
+        log_success "Set git user.name: $GIT_NAME"
+    fi
+
+    # Write user.email if not already correct
+    current_email=$(git config --global user.email 2>/dev/null || echo "")
+    if [ "$current_email" != "$GIT_EMAIL" ]; then
+        git config --global user.email "$GIT_EMAIL"
+        log_success "Set git user.email: $GIT_EMAIL"
+    fi
+
+    # Add include directive for dotfiles/.gitconfig if not present
+    if [ -f "${DOTFILES_DIR}/.gitconfig" ]; then
+        if ! grep -q "path = ${DOTFILES_DIR}/.gitconfig" ~/.gitconfig 2>/dev/null; then
+            echo "" >> ~/.gitconfig
+            echo "[include]" >> ~/.gitconfig
+            echo "    path = ${DOTFILES_DIR}/.gitconfig" >> ~/.gitconfig
+            log_success "Added include for ${DOTFILES_DIR}/.gitconfig"
+        fi
+    fi
+
+    log_success "Git configuration complete"
+    echo ""
+elif [ "$GIT_AVAILABLE" = false ]; then
+    log_warning "Git not available yet - config will be written after Xcode installation"
+    log_info "Values collected: $GIT_NAME <$GIT_EMAIL>"
     echo ""
 fi
 
@@ -102,6 +164,38 @@ else
         log_info "Accepting Xcode license agreement..."
         sudo xcodebuild -license accept
         log_success "Xcode license accepted"
+    fi
+
+    # Now that Xcode is installed, write git config if we collected it earlier but couldn't write
+    # This handles the case where git wasn't available on first pass (before Xcode)
+    if [ "$GIT_AVAILABLE" = false ] && [ -n "$GIT_NAME" ] && [ -n "$GIT_EMAIL" ]; then
+        log_info "Git now available - writing collected configuration..."
+
+        # Create ~/.gitconfig if needed
+        if [ ! -f ~/.gitconfig ]; then
+            touch ~/.gitconfig
+            log_info "Created ~/.gitconfig"
+        fi
+
+        git config --global user.name "$GIT_NAME"
+        log_success "Set git user.name: $GIT_NAME"
+
+        git config --global user.email "$GIT_EMAIL"
+        log_success "Set git user.email: $GIT_EMAIL"
+
+        # Add include directive
+        if [ -f "${DOTFILES_DIR}/.gitconfig" ]; then
+            if ! grep -q "path = ${DOTFILES_DIR}/.gitconfig" ~/.gitconfig 2>/dev/null; then
+                echo "" >> ~/.gitconfig
+                echo "[include]" >> ~/.gitconfig
+                echo "    path = ${DOTFILES_DIR}/.gitconfig" >> ~/.gitconfig
+                log_success "Added include for ${DOTFILES_DIR}/.gitconfig"
+            fi
+        fi
+
+        GIT_AVAILABLE=true
+        log_success "Git configuration complete"
+        echo ""
     fi
 fi
 
@@ -392,58 +486,21 @@ if [ -f "${DOTFILES_DIR}/macos.sh" ]; then
     fi
 fi
 
-# Setup Git
-log_info "Configuring Git..."
-
-# Set user name and email (only if we have values and they're not already set correctly)
-if [ -n "${GIT_NAME:-}" ]; then
-    current_name=$(git config --global user.name 2>/dev/null || echo "")
-    if [ "$current_name" != "$GIT_NAME" ]; then
-        if git config --global user.name "$GIT_NAME"; then
-            log_success "Set git user.name to: $GIT_NAME"
-        else
-            log_error "Failed to set git user.name"
-        fi
+# Verify Git configuration (config was written earlier in the script)
+log_info "Verifying Git configuration..."
+if [ -f ~/.gitconfig ]; then
+    final_name=$(git config --global user.name 2>/dev/null || echo "")
+    final_email=$(git config --global user.email 2>/dev/null || echo "")
+    if [ -n "$final_name" ] && [ -n "$final_email" ]; then
+        log_success "Git configured: $final_name <$final_email>"
     else
-        log_success "git user.name already correct: $GIT_NAME"
+        log_error "Git config file exists but user.name/email missing!"
+        log_error "Run: git config --global user.name 'Your Name'"
+        log_error "Run: git config --global user.email 'your@email.com'"
     fi
-fi
-if [ -n "${GIT_EMAIL:-}" ]; then
-    current_email=$(git config --global user.email 2>/dev/null || echo "")
-    if [ "$current_email" != "$GIT_EMAIL" ]; then
-        if git config --global user.email "$GIT_EMAIL"; then
-            log_success "Set git user.email to: $GIT_EMAIL"
-        else
-            log_error "Failed to set git user.email"
-        fi
-    else
-        log_success "git user.email already correct: $GIT_EMAIL"
-    fi
-fi
-
-# Verify .gitconfig was created
-if [ ! -f ~/.gitconfig ]; then
-    log_warning "~/.gitconfig does not exist after setting values!"
-    log_info "Creating ~/.gitconfig manually..."
-    touch ~/.gitconfig
-    git config --global user.name "$GIT_NAME"
-    git config --global user.email "$GIT_EMAIL"
-    log_success "Manually created ~/.gitconfig"
-fi
-
-# Include dotfiles gitconfig (do not symlink, use include directive)
-if [ -f "${DOTFILES_DIR}/.gitconfig" ]; then
-    if [ ! -f ~/.gitconfig ] || ! grep -q "path = ${DOTFILES_DIR}/.gitconfig" ~/.gitconfig; then
-        # Preserve any existing config by appending include
-        if [ -f ~/.gitconfig ]; then
-            echo "" >> ~/.gitconfig
-        fi
-        echo "[include]" >> ~/.gitconfig
-        echo "    path = ${DOTFILES_DIR}/.gitconfig" >> ~/.gitconfig
-        log_success "Git configured to include ${DOTFILES_DIR}/.gitconfig"
-    else
-        log_success "Git already includes dotfiles/.gitconfig"
-    fi
+else
+    log_error "~/.gitconfig does not exist!"
+    log_error "This should not happen - please report this bug"
 fi
 
 # Post-install authentication setup
