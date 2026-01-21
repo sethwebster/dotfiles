@@ -49,8 +49,9 @@ echo "$CURRENT_TIME" > "$LAST_CHECK_FILE"
     REMOTE=$(git rev-parse @{u} 2>/dev/null)
 
     if [ "$LOCAL" != "$REMOTE" ]; then
-        # Show notification
-        cat << 'EOF'
+        # Show notification (use echo if cat fails)
+        if command -v cat &>/dev/null; then
+            cat << 'EOF'
 
 ╔═══════════════════════════════════════════════════════════╗
 ║  📦 Dotfiles Update Available                             ║
@@ -65,5 +66,13 @@ echo "$CURRENT_TIME" > "$LAST_CHECK_FILE"
     cd ~/dotfiles && git pull
 
 EOF
+        else
+            echo ""
+            echo "📦 Dotfiles Update Available"
+            echo ""
+            echo "  New updates are available!"
+            echo "  To update, run: dotfiles-update"
+            echo ""
+        fi
     fi
 ) &

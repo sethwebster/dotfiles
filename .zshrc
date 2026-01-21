@@ -29,12 +29,14 @@ fi
 # Bun completions
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
-# fzf (fuzzy finder)
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-eval "$(fzf --zsh)" 2>/dev/null
+# fzf (fuzzy finder) - check if installed
+if command -v fzf &>/dev/null; then
+    [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+    eval "$(fzf --zsh)" 2>/dev/null
+fi
 
-# zoxide (smart cd)
-eval "$(zoxide init zsh)" 2>/dev/null
+# zoxide (smart cd) - check if installed
+command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
 
 # Environment variables
 export EDITOR='code -w'
