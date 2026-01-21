@@ -39,15 +39,15 @@ echo ""
 log_info "Starting Mac bootstrap from ${DOTFILES_DIR}"
 echo ""
 
-# Collect required information upfront
-log_info "First, let's collect some information..."
-echo ""
-
 # Check if we already have git config
 GIT_NAME=$(git config --global user.name 2>/dev/null || echo "")
 GIT_EMAIL=$(git config --global user.email 2>/dev/null || echo "")
 
 if [ -z "${GIT_NAME}" ] || [ -z "${GIT_EMAIL}" ]; then
+    # Only show collection message if we actually need info
+    log_info "First, let's collect some information..."
+    log_info "(Required for Git commits - stored in ~/.gitconfig)"
+    echo ""
     log_warning "Git user information not configured"
 
     if [ -z "${GIT_NAME:-}" ]; then
@@ -78,7 +78,13 @@ fi
 if ! xcode-select -p &> /dev/null; then
     log_info "Installing Xcode Command Line Tools..."
     xcode-select --install
-    log_warning "Please complete the Xcode installation and re-run this script"
+    echo ""
+    log_warning "MANUAL STEP REQUIRED:"
+    log_warning "1. Complete the Xcode installation popup"
+    log_warning "2. Wait for 'The software was installed' message"
+    log_warning "3. Re-run this script: ./bootstrap.sh"
+    echo ""
+    log_info "Script will exit now. See you in ~5 minutes!"
     exit 0
 else
     log_success "Xcode Command Line Tools installed"
@@ -117,15 +123,24 @@ fi
 
 # Verify App Store sign-in (mas account can be unreliable)
 if ! mas account &> /dev/null; then
-    log_warning "Cannot verify Mac App Store sign-in status"
-    log_warning "If you see 'mas' errors below, sign in via:"
-    log_warning "  System Settings > Media & Purchases > Sign In"
+    log_warning "Cannot verify Mac App Store sign-in"
+    echo ""
+    log_info "Some apps require App Store authentication:"
+    log_info "  - Things 3 (task manager)"
+    log_info "  - Amphetamine (prevent sleep)"
+    log_info "  - Bear, Fantastical, etc."
+    echo ""
+    log_info "To sign in: System Settings > Media & Purchases > Sign In"
     echo ""
     read -p "Are you signed into the App Store? (y/N) " -n 1 -r
     echo ""
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log_warning "App Store apps (Things 3, Amphetamine) will be skipped"
+        log_warning "App Store apps will be skipped (install manually later)"
+        log_info "You can re-run bootstrap after signing in to retry"
+    else
+        log_success "Proceeding with App Store apps"
     fi
+    echo ""
 fi
 
 # Install from Brewfile
@@ -199,8 +214,14 @@ if [ -f "${DOTFILES_DIR}/Brewfile" ]; then
         echo "$line" >> "$TEMP_BREWFILE"
     done < "${DOTFILES_DIR}/Brewfile"
 
-    log_info "Installing apps and tools from Brewfile (this may take several minutes)..."
-    log_info "Homebrew will show progress for each app..."
+    # Count total items to install
+    total_items=$(grep -E '^(brew|cask|mas|vscode)' "$TEMP_BREWFILE" | wc -l | xargs)
+
+    log_info "Installing apps and tools from Brewfile"
+    log_info "Queued: $total_items packages/apps to install"
+    log_warning "This typically takes 5-10 minutes depending on what's new..."
+    log_info "Progress will appear below (Homebrew shows each item)"
+    log_warning "Large apps (Docker, Xcode, Chrome) may pause 1-2 minutes - this is normal"
     log_info "You may be prompted for your password once..."
     echo ""
 
@@ -208,13 +229,19 @@ if [ -f "${DOTFILES_DIR}/Brewfile" ]; then
     sudo -v
 
     # Keep sudo alive in background during long install
+    log_info "Starting background sudo keepalive (prevents repeated password prompts)"
     (while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null) &
     SUDO_KEEPALIVE_PID=$!
+
+    echo ""
 
     # Use --no-upgrade to skip already-installed apps
     brew bundle --file="$TEMP_BREWFILE" --no-upgrade
 
+    echo ""
+
     # Kill sudo keepalive
+    log_info "Stopping sudo keepalive"
     kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
     wait "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
 
@@ -270,24 +297,41 @@ bash "${DOTFILES_DIR}/install.sh"
 # Install asdf plugins and versions
 if [ -f "${DOTFILES_DIR}/.tool-versions" ]; then
     log_info "Installing asdf tools from .tool-versions..."
+    log_warning "Each tool may take 2-5 minutes to compile (especially Python/Ruby)"
+    echo ""
 
+    log_info "Tools to install:"
     # Read plugins from .tool-versions
     while IFS= read -r line; do
         if [[ ! -z "$line" && ! "$line" =~ ^# ]]; then
             plugin=$(echo "$line" | awk '{print $1}')
+            version=$(echo "$line" | awk '{print $2}')
 
             # Add plugin if not exists
             if ! asdf plugin list | grep -q "^${plugin}$"; then
-                log_info "Adding asdf plugin: ${plugin}"
+                log_info "  Adding plugin: ${plugin}"
                 asdf plugin add "$plugin"
+            fi
+
+            # Check if already installed
+            if asdf list "$plugin" 2>/dev/null | grep -q "$version"; then
+                log_success "  $plugin $version (already installed)"
+            else
+                log_info "  $plugin $version (will install)"
             fi
         fi
     done < "${DOTFILES_DIR}/.tool-versions"
 
+    echo ""
+    log_info "Starting installations (this may take 5-15 minutes total)..."
+    echo ""
+
     # Install all versions
     cd "${DOTFILES_DIR}"
     asdf install
-    log_success "asdf tools installed"
+
+    echo ""
+    log_success "All asdf tools installed"
 fi
 
 # Set up Bun (if not via asdf)
@@ -302,9 +346,20 @@ fi
 # Configure macOS defaults
 if [ -f "${DOTFILES_DIR}/macos.sh" ]; then
     if [ -f ~/.macos-defaults-applied ]; then
-        log_success "macOS defaults already applied (delete ~/.macos-defaults-applied to re-run)"
+        log_success "macOS defaults already applied"
+        log_info "(Delete ~/.macos-defaults-applied to re-apply)"
     else
-        log_warning "About to configure macOS system defaults (Finder, Dock, etc.)"
+        echo ""
+        log_warning "macOS System Defaults Configuration"
+        log_info "This will change:"
+        log_info "  ✓ Finder: show hidden files, extensions, path bar"
+        log_info "  ✓ Dock: auto-hide, faster animations, smaller icons"
+        log_info "  ✓ Screenshots: save to ~/Screenshots as PNG"
+        log_info "  ✓ Keyboard: faster key repeat, disable autocorrect"
+        log_info "  ✓ Trackpad: tap to click enabled"
+        echo ""
+        log_warning "Some changes require restart to take effect"
+        echo ""
         read -p "Apply macOS defaults? (y/n) " -n 1 -r
         echo ""
         if [[ $REPLY =~ ^[Yy]$ ]]; then

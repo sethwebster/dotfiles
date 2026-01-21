@@ -4,17 +4,36 @@
 
 set -euo pipefail
 
-echo "Configuring macOS defaults..."
+# Colors for output
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+log_info() {
+    echo -e "${BLUE}==>${NC} $1"
+}
+
+log_success() {
+    echo -e "${GREEN}✓${NC} $1"
+}
+
+echo ""
+log_info "Configuring macOS defaults..."
+log_info "This will take 10-15 seconds..."
+echo ""
 
 # Request sudo upfront to avoid mid-script password prompts
 sudo -v
 
 # Close System Preferences if open
+log_info "Closing System Preferences..."
 osascript -e 'tell application "System Preferences" to quit'
 
 ###############################################################################
 # General UI/UX                                                               #
 ###############################################################################
+
+log_info "Configuring UI/UX settings..."
 
 # Disable the sound effects on boot
 sudo nvram SystemAudioVolume=" "
@@ -34,6 +53,8 @@ defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
 # Screenshots                                                                 #
 ###############################################################################
 
+log_info "Configuring screenshot settings..."
+
 # Save screenshots to ~/Screenshots
 mkdir -p "${HOME}/Screenshots"
 defaults write com.apple.screencapture location -string "${HOME}/Screenshots"
@@ -47,6 +68,8 @@ defaults write com.apple.screencapture disable-shadow -bool true
 ###############################################################################
 # Finder                                                                      #
 ###############################################################################
+
+log_info "Configuring Finder..."
 
 # Show hidden files by default
 defaults write com.apple.finder AppleShowAllFiles -bool true
@@ -86,6 +109,8 @@ sudo chflags nohidden /Volumes
 # Dock                                                                        #
 ###############################################################################
 
+log_info "Configuring Dock..."
+
 # Set the icon size of Dock items
 defaults write com.apple.dock tilesize -int 48
 
@@ -121,6 +146,8 @@ defaults write com.apple.dock show-recents -bool false
 # Keyboard & Input                                                            #
 ###############################################################################
 
+log_info "Configuring keyboard..."
+
 # Enable full keyboard access for all controls (e.g. Tab in modal dialogs)
 defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
 
@@ -134,6 +161,8 @@ defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
 ###############################################################################
 # Trackpad                                                                    #
 ###############################################################################
+
+log_info "Configuring trackpad..."
 
 # Enable tap to click for this user and for the login screen
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
@@ -170,6 +199,8 @@ defaults write com.apple.ActivityMonitor SortDirection -int 0
 # Mac App Store                                                               #
 ###############################################################################
 
+log_info "Configuring App Store..."
+
 # Enable the automatic update check
 defaults write com.apple.SoftwareUpdate AutomaticCheckEnabled -bool true
 
@@ -183,5 +214,8 @@ defaults write com.apple.SoftwareUpdate CriticalUpdateInstall -int 1
 # Done                                                                        #
 ###############################################################################
 
-echo "Done! Some changes require a logout/restart to take effect."
-echo "You may need to run: killall Finder Dock SystemUIServer"
+echo ""
+log_success "macOS defaults applied!"
+log_warning "Some changes require logout/restart"
+log_info "Quick restart UI: killall Finder Dock SystemUIServer"
+echo ""

@@ -148,9 +148,17 @@ if command -v mackup &> /dev/null; then
     read -p "Run mackup backup? (y/N) " -n 1 -r
     echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        mackup backup
+        log_info "Running Mackup backup (syncing app settings to iCloud)..."
+        log_info "Using --force to skip confirmation prompts..."
+        mackup backup --force
+        echo ""
         log_success "Mackup backup complete"
-        log_info "Settings synced to iCloud: $(mackup list | wc -l | xargs) apps"
+
+        # Show summary
+        app_count=$(mackup list 2>/dev/null | wc -l | xargs)
+        if [ "$app_count" -gt 0 ]; then
+            log_info "Synced settings for $app_count apps to iCloud"
+        fi
     else
         log_info "Skipped Mackup backup"
     fi
