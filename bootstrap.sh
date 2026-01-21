@@ -234,11 +234,12 @@ if [ -f "${DOTFILES_DIR}/Brewfile" ]; then
     SUDO_KEEPALIVE_PID=$!
 
     echo ""
-    log_info "Starting Homebrew installations (output will appear shortly)..."
+    log_info "Starting Homebrew installations (verbose mode - you'll see everything)..."
+    log_warning "Initial phase: Homebrew may check package info for 1-2 minutes before installations start"
     echo ""
 
-    # Use --no-upgrade to skip already-installed apps
-    brew bundle --file="$TEMP_BREWFILE" --no-upgrade
+    # Use --no-upgrade to skip already-installed apps, --verbose to show progress immediately
+    brew bundle --file="$TEMP_BREWFILE" --no-upgrade --verbose
 
     echo ""
 
