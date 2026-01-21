@@ -109,7 +109,7 @@ mas "Numbers", id: 409203825
 mas "Pages", id: 409201541
 mas "Prime Video", id: 545519333
 mas "SiteSucker", id: 442168834
-mas "TestFlight", id: 899247664
+# mas "TestFlight", id: 899247664  # Cannot install via mas - macOS security restrictions. Install manually from App Store.
 mas "The Unarchiver", id: 425424353
 mas "Things", id: 904280696
 mas "WhatsApp", id: 310633997
