@@ -91,7 +91,10 @@ if ! command -v brew &> /dev/null; then
 
     # Add Homebrew to PATH for Apple Silicon
     if [[ $(uname -m) == 'arm64' ]]; then
-        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+        # Only add if not already present
+        if ! grep -q "/opt/homebrew/bin/brew shellenv" ~/.zprofile 2>/dev/null; then
+            echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+        fi
         eval "$(/opt/homebrew/bin/brew shellenv)"
     fi
     log_success "Homebrew installed"
@@ -112,17 +115,40 @@ else
     log_warning "Brewfile not found, skipping..."
 fi
 
-# Install asdf if not present
-if ! command -v asdf &> /dev/null; then
-    log_info "Installing asdf..."
-    brew install asdf
-    ASDF_PATH="$(brew --prefix asdf)/libexec/asdf.sh"
-    echo -e "\n. \"${ASDF_PATH}\"" >> ~/.zshrc
-    # shellcheck disable=SC1090
-    . "${ASDF_PATH}"
-    log_success "asdf installed"
+# Check for existing version managers
+EXISTING_VERSION_MANAGERS=""
+command -v nvm &>/dev/null && EXISTING_VERSION_MANAGERS="${EXISTING_VERSION_MANAGERS}nvm "
+command -v pyenv &>/dev/null && EXISTING_VERSION_MANAGERS="${EXISTING_VERSION_MANAGERS}pyenv "
+command -v rbenv &>/dev/null && EXISTING_VERSION_MANAGERS="${EXISTING_VERSION_MANAGERS}rbenv "
+
+if [ -n "$EXISTING_VERSION_MANAGERS" ]; then
+    log_warning "Found existing version managers: ${EXISTING_VERSION_MANAGERS}"
+    log_warning "These may conflict with asdf. Consider migrating or skipping asdf installation."
+    echo ""
+    read -p "Install asdf anyway? (y/N) " -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log_info "Skipping asdf installation"
+    else
+        if ! command -v asdf &> /dev/null; then
+            log_info "Installing asdf..."
+            brew install asdf
+            # Note: asdf sourcing handled in path.zsh, no need to modify ~/.zshrc
+            log_success "asdf installed"
+        else
+            log_success "asdf already installed"
+        fi
+    fi
 else
-    log_success "asdf already installed"
+    # Install asdf if not present and no conflicts
+    if ! command -v asdf &> /dev/null; then
+        log_info "Installing asdf..."
+        brew install asdf
+        # Note: asdf sourcing handled in path.zsh, no need to modify ~/.zshrc
+        log_success "asdf installed"
+    else
+        log_success "asdf already installed"
+    fi
 fi
 
 # Symlink dotfiles

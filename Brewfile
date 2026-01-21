@@ -24,8 +24,8 @@ brew "ngrok"            # Tunneling
 brew "postgresql@15"    # PostgreSQL client
 
 # Development
-brew "node"             # Fallback if asdf not used
-brew "python@3.12"      # Fallback if asdf not used
+# Note: Node and Python managed via asdf (.tool-versions)
+# Installing via Homebrew causes PATH conflicts
 
 # Docker
 cask "docker"

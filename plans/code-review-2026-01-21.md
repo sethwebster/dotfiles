@@ -6,6 +6,310 @@ This dotfiles repository provides macOS setup automation with reasonable structu
 
 ---
 
+# ADDENDUM: Idempotency Analysis for EXISTING Systems
+
+**Focus**: Running `bootstrap.sh` on an already-configured Mac (not fresh install)
+
+---
+
+## CRITICAL: Existing System Hazards
+
+### A1. .zshrc Corruption via asdf Append (CRITICAL)
+
+**Location**: `/Users/sethwebster/dotfiles/bootstrap.sh`, lines 117-123
+
+```bash
+if ! command -v asdf &> /dev/null; then
+    log_info "Installing asdf..."
+    brew install asdf
+    ASDF_PATH="$(brew --prefix asdf)/libexec/asdf.sh"
+    echo -e "\n. \"${ASDF_PATH}\"" >> ~/.zshrc
+```
+
+**Problem**: On an existing system:
+1. If `~/.zshrc` is already symlinked to `dotfiles/.zshrc` (from previous run)
+2. This append **WRITES TO THE TRACKED FILE** in the git repo
+3. Corrupts the dotfiles, pollutes `git status`
+4. Re-running creates duplicate entries
+
+**Scenario**:
+1. User runs bootstrap once - install.sh symlinks ~/.zshrc
+2. User upgrades Mac, Homebrew gets reset
+3. User runs bootstrap again - asdf not found
+4. Script appends to ~/.zshrc which is now a symlink
+5. **THE DOTFILES/.zshrc IS NOW CORRUPTED**
+
+**Impact**: HIGH. Can destroy tracked git files.
+
+**Fix**: The `.zshrc` in dotfiles already sources asdf via the conditional in lines 22-27. Remove lines 120-121 entirely - they're redundant and dangerous.
+
+---
+
+### A2. .zprofile Duplication
+
+**Location**: `/Users/sethwebster/dotfiles/bootstrap.sh`, lines 93-96
+
+```bash
+if [[ $(uname -m) == 'arm64' ]]; then
+    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+```
+
+**Problem**: Inside the `if ! command -v brew` block, but no idempotency check for the .zprofile line itself.
+
+**Scenario**:
+1. User runs bootstrap - Homebrew installs, line added to .zprofile
+2. User runs `brew uninstall` on everything or reformats
+3. User re-clones dotfiles and runs bootstrap
+4. Homebrew not found (command check fails)
+5. **DUPLICATE LINE APPENDED** to .zprofile
+
+**Impact**: MEDIUM. Wastes startup time, ugly file.
+
+**Fix**:
+```bash
+if ! grep -q '/opt/homebrew/bin/brew shellenv' ~/.zprofile 2>/dev/null; then
+    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+fi
+```
+
+---
+
+### A3. Port Conflicts - Docker Compose
+
+**Location**: `/Users/sethwebster/dotfiles/docker-compose.yml`
+
+**Ports**: 5432 (postgres), 6379 (redis)
+
+**Problem**: On existing system:
+- User might have local PostgreSQL already running
+- User might have other containers using these ports
+- Container names `dev-postgres` and `dev-redis` might exist
+
+**Scenario**:
+1. User has Postgres.app running on 5432
+2. User runs `docker compose up` from dotfiles
+3. **FAILS** with port binding error
+4. Or worse: user's existing `dev-postgres` container gets replaced
+
+**Impact**: LOW (not auto-started), but documentation should warn.
+
+---
+
+### A4. nvm/pyenv/rbenv Conflicts
+
+**Location**: `/Users/sethwebster/dotfiles/bootstrap.sh`, `Brewfile`
+
+**Problem**: Scripts install asdf + node/python versions. Existing version managers conflict:
+
+**Scenario 1 - nvm user**:
+1. User has nvm installed with Node 18 for work projects
+2. Bootstrap installs asdf with Node 22.20.0
+3. PATH order determines which wins
+4. User's projects break or use wrong Node
+
+**Scenario 2 - pyenv user**:
+1. User has pyenv with specific Python for ML work
+2. Bootstrap installs asdf Python 3.12.0
+3. User's virtualenvs now reference wrong Python
+
+**Impact**: HIGH. Can break existing development workflows silently.
+
+**Fix**: Add detection:
+```bash
+for manager in nvm pyenv rbenv; do
+    if command -v $manager &>/dev/null || [ -d "$HOME/.$manager" ]; then
+        log_warning "$manager detected. asdf may conflict. Continue? (y/n)"
+    fi
+done
+```
+
+---
+
+### A5. Brewfile Installs Conflicting Versions
+
+**Location**: `/Users/sethwebster/dotfiles/Brewfile`, lines 27-28
+
+```ruby
+brew "node"             # Fallback if asdf not used
+brew "python@3.12"      # Fallback if asdf not used
+```
+
+**Problem**: `brew bundle` always installs these. They conflict with asdf-managed versions.
+
+**Scenario**:
+1. Bootstrap runs asdf, installs node 22.20.0
+2. Then brew bundle runs, installs Homebrew's node (different version)
+3. User now has TWO node installations
+4. `which node` returns unpredictable result based on PATH
+
+**Impact**: HIGH. Version confusion, disk waste.
+
+**Fix**: Remove from Brewfile or make separate `Brewfile.fallback`.
+
+---
+
+### A6. Oh-My-Zsh Plugin Errors
+
+**Location**: `/Users/sethwebster/dotfiles/.zshrc`, lines 59-70
+
+```bash
+plugins=(
+    git
+    docker
+    ...
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+)
+```
+
+**Problem**: If Oh-My-Zsh already installed BUT user declined plugin installation in install.sh (or plugins were removed):
+
+**Scenario**:
+1. User has existing Oh-My-Zsh with custom plugins
+2. Bootstrap runs - Oh-My-Zsh exists, skips install
+3. Plugin install prompt - user says No
+4. .zshrc symlinked - references missing plugins
+5. **SHELL THROWS ERRORS ON EVERY STARTUP**
+
+**Impact**: MEDIUM. Annoying but not data loss.
+
+**Fix**: Check plugin existence before loading:
+```bash
+plugins=(git docker)
+[ -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ] && plugins+=(zsh-autosuggestions)
+```
+
+---
+
+### A7. Existing Oh-My-Zsh Theme/Plugin Loss
+
+**Location**: `/Users/sethwebster/dotfiles/install.sh`, lines 101-123
+
+**Problem**: Script checks for Oh-My-Zsh directory existence but doesn't handle:
+1. User's custom theme
+2. User's existing plugins list
+3. User's ZSH_CUSTOM directory with personal scripts
+
+**Scenario**:
+1. User has Oh-My-Zsh with custom theme (powerlevel10k) and plugins
+2. Bootstrap runs - Oh-My-Zsh exists, skips install
+3. .zshrc symlinked - **OVERWRITES user's plugin/theme config**
+4. User's shell looks different, plugins missing
+
+**Impact**: MEDIUM. User configuration lost (not data).
+
+**Fix**: `.zshrc` backup happens in install.sh (good), but user should be warned explicitly that their shell config WILL CHANGE.
+
+---
+
+### A8. Git Config Include Accumulation
+
+**Location**: `/Users/sethwebster/dotfiles/bootstrap.sh`, lines 194-206
+
+```bash
+if [ ! -f ~/.gitconfig ] || ! grep -q "path = ${DOTFILES_DIR}/.gitconfig" ~/.gitconfig; then
+    if [ -f ~/.gitconfig ]; then
+        echo "" >> ~/.gitconfig
+    fi
+    echo "[include]" >> ~/.gitconfig
+    echo "    path = ${DOTFILES_DIR}/.gitconfig" >> ~/.gitconfig
+```
+
+**Problem**: Only checks for exact path match. Doesn't handle:
+1. Multiple `[include]` sections (valid but ugly)
+2. User manually edited path slightly
+3. Different DOTFILES_DIR on re-clone
+
+**Scenario**:
+1. User runs bootstrap from /Users/foo/dotfiles
+2. User moves repo to /Users/foo/my-dotfiles
+3. Runs bootstrap again
+4. **NEW INCLUDE ADDED** with new path
+5. Two includes, one broken
+
+**Impact**: LOW. Git still works, just messy config.
+
+---
+
+### A9. macOS Defaults Overwrites User Preferences
+
+**Location**: `/Users/sethwebster/dotfiles/macos.sh`
+
+**Problem**: Even with prompt, first run DESTROYS user preferences:
+
+**Settings Changed Without Asking**:
+- Line 31: Disables auto-correct (user might rely on this)
+- Line 90: Dock size = 48 (user might have 36)
+- Line 109: Auto-hide dock (user might hate this)
+- Lines 128-129: Key repeat VERY fast (user might have RSI, need slow)
+- Lines 139-141: Tap-to-click enabled (user might prefer physical)
+
+**Scenario**:
+1. User has carefully configured Dock, keyboard, trackpad settings
+2. Runs bootstrap, says Yes to macOS defaults (thinking "sounds good")
+3. **ALL PREFERENCES RESET** to dotfiles author's taste
+4. User must manually reconfigure OR remember to check that flag file
+
+**Impact**: MEDIUM. User time wasted, preferences lost.
+
+**Fix**: Per-setting checks, or list EXACTLY what will change before prompt.
+
+---
+
+### A10. Working Directory Not Restored
+
+**Location**: `/Users/sethwebster/dotfiles/bootstrap.sh`, line 150
+
+```bash
+cd "${DOTFILES_DIR}"
+asdf install
+```
+
+**Problem**: Changes cwd, never returns. If user ran from `/some/project`:
+
+**Scenario**:
+1. User is in /Users/foo/my-project
+2. Runs ~/dotfiles/bootstrap.sh
+3. Script cds to ~/dotfiles for asdf
+4. User returns to prompt... in ~/dotfiles
+5. User types `git status` expecting my-project
+
+**Impact**: LOW. User confusion.
+
+**Fix**: Use subshell: `(cd "${DOTFILES_DIR}" && asdf install)`
+
+---
+
+## SUMMARY: Is This Safe for Existing Systems?
+
+**VERDICT: NO - Not without fixes**
+
+| Issue | Can Cause Data Loss? | Severity |
+|-------|---------------------|----------|
+| A1: .zshrc corruption | YES - corrupts tracked file | CRITICAL |
+| A2: .zprofile dupe | No | LOW |
+| A3: Port conflicts | No (not auto-started) | LOW |
+| A4: nvm/asdf conflict | Breaks projects | HIGH |
+| A5: Brew/asdf version conflict | Confusion | HIGH |
+| A6: Plugin errors | Annoying | MEDIUM |
+| A7: Theme/plugin loss | Config loss | MEDIUM |
+| A8: Git include accumulation | Messy | LOW |
+| A9: macOS defaults | Preference loss | MEDIUM |
+| A10: cwd not restored | Confusion | LOW |
+
+**Minimum Fixes Before Running on Existing System**:
+
+1. **MUST FIX A1**: Remove the asdf append to .zshrc (lines 120-121 of bootstrap.sh)
+2. **SHOULD FIX A4**: Add version manager conflict detection
+3. **SHOULD FIX A5**: Remove node/python from Brewfile (asdf handles them)
+4. **NICE TO HAVE A2**: Add idempotency check for .zprofile
+
+---
+
+---
+
 ## Sudo Usage & Privilege Escalation Analysis
 
 ### Summary: PASS - No Security Regressions
