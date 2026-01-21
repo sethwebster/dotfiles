@@ -3,7 +3,6 @@
 # Taps
 tap "homebrew/bundle"
 tap "homebrew/cask-fonts"
-tap "AlexanderWillner/tap"
 
 # CLI Tools
 brew "git"
@@ -60,8 +59,8 @@ cask "raycast"          # Spotlight replacement
 cask "alfred"           # Alternative launcher
 cask "obsidian"         # Note-taking
 cask "bear"             # Note-taking
-# Note: Things 3 app from Mac App Store, but CLI available via Homebrew
-brew "things.sh"        # Things 3 CLI automation
+# Note: Things 3 app from Mac App Store
+# Things CLI: brew tap AlexanderWillner/tap && brew install things.sh
 cask "fantastical"      # Calendar
 
 # Communication
