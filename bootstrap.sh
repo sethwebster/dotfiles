@@ -106,6 +106,24 @@ fi
 log_info "Updating Homebrew..."
 brew update
 
+# Install mas (Mac App Store CLI) first if not present
+if ! command -v mas &> /dev/null; then
+    log_info "Installing mas (Mac App Store CLI)..."
+    brew install mas
+    log_success "mas installed"
+else
+    log_success "mas already installed"
+fi
+
+# Verify App Store sign-in
+if ! mas account &> /dev/null; then
+    log_warning "Not signed into Mac App Store"
+    log_warning "Please sign in via System Settings > Apple ID"
+    log_warning "App Store apps will be skipped"
+    echo ""
+    read -p "Press Enter to continue..." -r
+fi
+
 # Install from Brewfile
 if [ -f "${DOTFILES_DIR}/Brewfile" ]; then
     log_info "Installing apps and tools from Brewfile..."
