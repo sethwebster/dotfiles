@@ -103,8 +103,8 @@ else
 fi
 
 # Update Homebrew
-log_info "Updating Homebrew..."
-brew update
+log_info "Updating Homebrew (this may take a minute)..."
+brew update --quiet 2>&1 | grep -v "^Already up-to-date" || log_success "Homebrew updated"
 
 # Install mas (Mac App Store CLI) first if not present
 if ! command -v mas &> /dev/null; then
@@ -126,8 +126,11 @@ fi
 
 # Install from Brewfile
 if [ -f "${DOTFILES_DIR}/Brewfile" ]; then
-    log_info "Installing apps and tools from Brewfile..."
-    brew bundle --file="${DOTFILES_DIR}/Brewfile"
+    log_info "Installing apps and tools from Brewfile (this may take several minutes)..."
+    log_info "Homebrew will show progress for each app..."
+    echo ""
+    brew bundle --file="${DOTFILES_DIR}/Brewfile" --no-lock
+    echo ""
     log_success "Brewfile installed"
 else
     log_warning "Brewfile not found, skipping..."
