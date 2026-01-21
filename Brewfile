@@ -1,95 +1,162 @@
-# Seth's Brewfile - Homebrew packages and applications
-# Note: homebrew/bundle and homebrew/cask-fonts are now in core Homebrew
-
-# CLI Tools
-brew "git"
-brew "gh"               # GitHub CLI
-brew "asdf"             # Version manager
-brew "mackup"           # App settings sync
-brew "mas"              # Mac App Store CLI
-brew "wget"
+tap "mczachurski/wallpapper"
+brew "act"
+brew "aom"
+brew "asdf"
+brew "openssl@1.1"
+brew "python@3.11"
+brew "autojump"
+brew "awscli"
+brew "bat"
+brew "cairo"
+brew "harfbuzz"
+brew "bfg"
+brew "cloc"
+brew "cmake"
+brew "cocoapods"
+brew "coreutils"
 brew "curl"
-brew "jq"               # JSON processor
-brew "tree"             # Directory tree
-brew "htop"             # Process viewer
-brew "ripgrep"          # Fast grep
-brew "fzf"              # Fuzzy finder
-brew "bat"              # Better cat
-brew "eza"              # Better ls
-brew "zoxide"           # Smart cd
-brew "tldr"             # Simplified man pages
-brew "postgresql@15"    # PostgreSQL client
-
-# Development
-# Note: Node and Python managed via asdf (.tool-versions)
-# Installing via Homebrew causes PATH conflicts
-
-# Docker
-cask "docker"
-
-# Browsers
-cask "google-chrome"
+brew "docutils"
+brew "libevent"
+brew "folly"
+brew "fizz"
+brew "wangle"
+brew "fbthrift"
+brew "fb303"
+brew "edencommon"
+brew "eza"
+brew "fastlane"
+brew "ffmpeg"
+brew "gcc"
+brew "open-mpi"
+brew "flyctl"
+brew "fzf"
+brew "gh"
+brew "ghostscript"
+brew "git"
+brew "git-lfs"
+brew "gnutls"
+brew "gpgme"
+brew "hdf5"
+brew "htop"
+brew "httpie"
+brew "hub"
+brew "shared-mime-info"
+brew "libheif"
+brew "imagemagick"
+brew "jq"
+brew "lazygit"
+brew "libgsf"
+brew "libimobiledevice"
+brew "libmatio"
+brew "libpq"
+brew "librsvg"
+brew "localtunnel"
+brew "mackup"
+brew "mas"
+brew "molten-vk"
+brew "mozjpeg"
+brew "ollama"
+brew "openslide"
+brew "poppler"
+brew "postgresql@15"
+brew "protobuf"
+brew "pure"
+brew "python@3.10"
+brew "redis"
+brew "ripgrep"
+brew "rust"
+brew "scc"
+brew "spoof-mac"
+brew "telnet"
+brew "tldr"
+brew "tree"
+brew "vips"
+brew "vulkan-loader"
+brew "watch"
+brew "watchman"
+brew "wget"
+brew "zoxide"
+brew "mczachurski/wallpapper/wallpapper"
 cask "arc"
-cask "firefox"
+cask "beeper"
 cask "brave-browser"
-
-# AI Tools
+cask "chatgpt"
+cask "claude"
 cask "claude-code"
-cask "claude"           # Claude desktop app
-cask "chatgpt"          # ChatGPT desktop app
-cask "cursor"           # AI code editor
-
-# Development Tools
-cask "visual-studio-code"
-cask "iterm2"
-cask "warp"
-cask "postman"          # API testing
-cask "pgadmin4"         # PostgreSQL GUI
-cask "expo-orbit"       # Expo development
-
-# Productivity & Launchers
-cask "slack"
-cask "discord"
-cask "notion"
-cask "zoom"
-cask "raycast"          # Spotlight replacement
-cask "alfred"           # Alternative launcher
-cask "obsidian"         # Note-taking
-cask "bear"             # Note-taking
-cask "fantastical"      # Calendar
-
-# Communication
-cask "signal"
-cask "whatsapp"
-cask "beeper"           # Multi-messenger
-
-# Password & Security
-cask "1password"
-
-# Utilities
-cask "rectangle"        # Window management
-cask "multipass"        # VM management
-cask "cleanshot"        # Screenshot tool
-cask "ngrok"            # Tunneling
-cask "the-unarchiver"   # Archive extraction
-cask "dropbox"          # Cloud storage
-cask "cyberduck"        # FTP/SFTP client
-cask "istat-menus"      # System monitor
-cask "daisydisk"        # Disk usage analyzer
-
-# Creative Tools
-cask "figma"            # Design
-cask "blender"          # 3D modeling
-
-# Media
-cask "spotify"
-cask "vlc"
-
-# Fonts
+cask "cursor"
+cask "docker-desktop"
+cask "firefox"
+cask "font-cascadia-code"
 cask "font-fira-code"
 cask "font-jetbrains-mono"
-cask "font-cascadia-code"
-
-# Mac App Store Apps (via mas CLI)
-mas "Things 3", id: 904280696
+cask "google-chrome"
+cask "iterm2"
+cask "multipass"
+cask "ngrok"
+cask "notion"
+cask "postman"
+cask "visual-studio-code"
+cask "warp"
 mas "Amphetamine", id: 937984704
+mas "Bear", id: 1091189122
+mas "Draw Things", id: 6444050820
+mas "Fantastical", id: 975937182
+mas "GarageBand", id: 682658836
+mas "iMovie", id: 408981434
+mas "Keynote", id: 409183694
+mas "KeyPad", id: 0
+mas "Kindle", id: 302584613
+mas "Numbers", id: 409203825
+mas "Pages", id: 409201541
+mas "Prime Video", id: 545519333
+mas "SiteSucker", id: 442168834
+mas "TestFlight", id: 899247664
+mas "The Unarchiver", id: 425424353
+mas "Things", id: 904280696
+mas "WhatsApp", id: 310633997
+mas "Windows App", id: 1295203466
+mas "Xcode", id: 497799835
+vscode "anthropic.claude-code"
+vscode "bourhaouta.tailwindshades"
+vscode "bradlc.vscode-tailwindcss"
+vscode "codesandbox-io.codesandbox-projects"
+vscode "dbaeumer.vscode-eslint"
+vscode "donjayamanne.typescript-notebook"
+vscode "eamodio.gitlens"
+vscode "editorconfig.editorconfig"
+vscode "equinusocio.vsc-material-theme"
+vscode "equinusocio.vsc-material-theme-icons"
+vscode "esbenp.prettier-vscode"
+vscode "expo.vscode-expo-theme"
+vscode "firsttris.vscode-jest-runner"
+vscode "github.copilot"
+vscode "github.copilot-chat"
+vscode "gruntfuggly.todo-tree"
+vscode "heybourn.headwind"
+vscode "jakebecker.elixir-ls"
+vscode "jvitor83.types-autoinstaller"
+vscode "mike-co.import-sorter"
+vscode "ms-azuretools.vscode-azureresourcegroups"
+vscode "ms-azuretools.vscode-containers"
+vscode "ms-azuretools.vscode-docker"
+vscode "ms-python.debugpy"
+vscode "ms-python.isort"
+vscode "ms-python.python"
+vscode "ms-python.vscode-pylance"
+vscode "ms-toolsai.jupyter-renderers"
+vscode "ms-vscode-remote.remote-containers"
+vscode "ms-vscode-remote.remote-ssh"
+vscode "ms-vscode-remote.remote-ssh-edit"
+vscode "ms-vscode.azure-account"
+vscode "ms-vscode.remote-explorer"
+vscode "ms-vsliveshare.vsliveshare"
+vscode "nrwl.angular-console"
+vscode "pantajoe.vscode-elixir-credo"
+vscode "piersdeseilligny.betterfountain"
+vscode "prisma.prisma"
+vscode "redhat.vscode-yaml"
+vscode "shd101wyy.markdown-preview-enhanced"
+vscode "teamsdevapp.ms-teams-vscode-extension"
+vscode "unifiedjs.vscode-mdx"
+vscode "xyc.vscode-mdx-preview"
+vscode "yzhang.markdown-all-in-one"
