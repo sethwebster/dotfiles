@@ -58,18 +58,14 @@ zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 
 # Initialize oh-my-zsh if installed
 if [ -f "$ZSH/oh-my-zsh.sh" ]; then
-    # Plugins
-    plugins=(
-        git
-        docker
-        docker-compose
-        node
-        npm
-        python
-        zsh-autosuggestions
-        zsh-syntax-highlighting
-    )
-    source $ZSH/oh-my-zsh.sh
+    # Plugins (only add if installed)
+    plugins=(git docker docker-compose node npm python)
+
+    # Add optional plugins if they exist
+    [ -d "${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-autosuggestions" ] && plugins+=(zsh-autosuggestions)
+    [ -d "${ZSH_CUSTOM:-$ZSH/custom}/plugins/zsh-syntax-highlighting" ] && plugins+=(zsh-syntax-highlighting)
+
+    source "$ZSH/oh-my-zsh.sh"
 fi
 
 # Load any local overrides (not tracked in git)

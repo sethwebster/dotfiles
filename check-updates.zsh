@@ -26,7 +26,7 @@ CHECK_INTERVAL=$((24 * 60 * 60))  # 24 hours in seconds
 
 # Check if we need to run (once per day)
 if [ -f "$LAST_CHECK_FILE" ]; then
-    LAST_CHECK=$(cat "$LAST_CHECK_FILE")
+    LAST_CHECK=$(command cat "$LAST_CHECK_FILE")
     TIME_SINCE_CHECK=$((CURRENT_TIME - LAST_CHECK))
 
     if [ $TIME_SINCE_CHECK -lt $CHECK_INTERVAL ]; then
