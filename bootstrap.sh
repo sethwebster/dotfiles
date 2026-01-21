@@ -399,8 +399,11 @@ log_info "Configuring Git..."
 if [ -n "${GIT_NAME:-}" ]; then
     current_name=$(git config --global user.name 2>/dev/null || echo "")
     if [ "$current_name" != "$GIT_NAME" ]; then
-        git config --global user.name "$GIT_NAME"
-        log_success "Set git user.name to: $GIT_NAME"
+        if git config --global user.name "$GIT_NAME"; then
+            log_success "Set git user.name to: $GIT_NAME"
+        else
+            log_error "Failed to set git user.name"
+        fi
     else
         log_success "git user.name already correct: $GIT_NAME"
     fi
@@ -408,11 +411,24 @@ fi
 if [ -n "${GIT_EMAIL:-}" ]; then
     current_email=$(git config --global user.email 2>/dev/null || echo "")
     if [ "$current_email" != "$GIT_EMAIL" ]; then
-        git config --global user.email "$GIT_EMAIL"
-        log_success "Set git user.email to: $GIT_EMAIL"
+        if git config --global user.email "$GIT_EMAIL"; then
+            log_success "Set git user.email to: $GIT_EMAIL"
+        else
+            log_error "Failed to set git user.email"
+        fi
     else
         log_success "git user.email already correct: $GIT_EMAIL"
     fi
+fi
+
+# Verify .gitconfig was created
+if [ ! -f ~/.gitconfig ]; then
+    log_warning "~/.gitconfig does not exist after setting values!"
+    log_info "Creating ~/.gitconfig manually..."
+    touch ~/.gitconfig
+    git config --global user.name "$GIT_NAME"
+    git config --global user.email "$GIT_EMAIL"
+    log_success "Manually created ~/.gitconfig"
 fi
 
 # Include dotfiles gitconfig (do not symlink, use include directive)
