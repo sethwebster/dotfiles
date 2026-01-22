@@ -6,6 +6,7 @@
 
 # Local overrides (not synced)
 *.local
+*.local.*
 
 # Sensitive data
 *.key
