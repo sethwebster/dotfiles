@@ -81,7 +81,7 @@ gac() {
 }
 
 # Create GitHub PR from current branch
-gpr() {
+ghpr() {
     gh pr create --fill
 }
 
