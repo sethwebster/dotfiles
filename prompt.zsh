@@ -105,5 +105,6 @@ _build_prompt() {
     echo "$prompt"
 }
 
-PROMPT='$(_build_prompt) %(?.%F{cyan}.%F{red})❯%f '
+PROMPT='$(_build_prompt)
+%(?.%F{cyan}.%F{red})❯%f '
 RPROMPT=''
