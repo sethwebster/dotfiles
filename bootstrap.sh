@@ -120,13 +120,17 @@ if [ "$GIT_AVAILABLE" = true ] && [ -n "$GIT_NAME" ] && [ -n "$GIT_EMAIL" ]; the
         log_success "Set git user.email: $GIT_EMAIL"
     fi
 
-    # Add include directive for dotfiles/.gitconfig if not present
+    # Add include directive for dotfiles/.gitconfig (use ~ for portability)
     if [ -f "${DOTFILES_DIR}/.gitconfig" ]; then
-        if ! grep -q "path = ${DOTFILES_DIR}/.gitconfig" ~/.gitconfig 2>/dev/null; then
-            echo "" >> ~/.gitconfig
-            echo "[include]" >> ~/.gitconfig
-            echo "    path = ${DOTFILES_DIR}/.gitconfig" >> ~/.gitconfig
-            log_success "Added include for ${DOTFILES_DIR}/.gitconfig"
+        # Use ~/dotfiles path for portability across machines/usernames
+        if ! grep -q 'path = ~/dotfiles/.gitconfig' ~/.gitconfig 2>/dev/null; then
+            # Remove any existing absolute path includes for dotfiles
+            sed -i '' '/path = .*dotfiles\/.gitconfig/d' ~/.gitconfig 2>/dev/null || true
+            # Remove empty [include] sections
+            sed -i '' '/^\[include\]$/{N;/^\[include\]\n$/d;}' ~/.gitconfig 2>/dev/null || true
+            # Add portable include
+            printf '\n[include]\n\tpath = ~/dotfiles/.gitconfig\n' >> ~/.gitconfig
+            log_success "Set include.path: ~/dotfiles/.gitconfig"
         fi
     fi
 
@@ -183,13 +187,11 @@ else
         git config --global user.email "$GIT_EMAIL"
         log_success "Set git user.email: $GIT_EMAIL"
 
-        # Add include directive
+        # Add include directive (use ~ for portability)
         if [ -f "${DOTFILES_DIR}/.gitconfig" ]; then
-            if ! grep -q "path = ${DOTFILES_DIR}/.gitconfig" ~/.gitconfig 2>/dev/null; then
-                echo "" >> ~/.gitconfig
-                echo "[include]" >> ~/.gitconfig
-                echo "    path = ${DOTFILES_DIR}/.gitconfig" >> ~/.gitconfig
-                log_success "Added include for ${DOTFILES_DIR}/.gitconfig"
+            if ! grep -q 'path = ~/dotfiles/.gitconfig' ~/.gitconfig 2>/dev/null; then
+                printf '\n[include]\n\tpath = ~/dotfiles/.gitconfig\n' >> ~/.gitconfig
+                log_success "Set include.path: ~/dotfiles/.gitconfig"
             fi
         fi
 

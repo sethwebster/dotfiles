@@ -44,6 +44,7 @@ export EDITOR='code -w'
 export VISUAL='code'
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
+export WARP_HONOR_PS1=1
 
 # History
 HISTSIZE=10000

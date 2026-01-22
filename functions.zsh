@@ -74,8 +74,8 @@ serve() {
     python3 -m http.server "$port"
 }
 
-# Git commit with message (renamed to avoid oh-my-zsh alias conflict)
-gcmsg() {
+# Git add all + commit with message
+gac() {
     git add .
     git commit -m "$1"
 }
