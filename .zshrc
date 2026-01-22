@@ -30,9 +30,6 @@ if command -v brew &>/dev/null; then
     [ -f "$ASDF_INIT" ] && . "$ASDF_INIT"
 fi
 
-# Bun completions
-[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
-
 # fzf (fuzzy finder) - check if installed
 if command -v fzf &>/dev/null; then
     [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
@@ -71,6 +68,13 @@ if [ -f "$ZSH/oh-my-zsh.sh" ]; then
 
     source "$ZSH/oh-my-zsh.sh"
 fi
+
+# Custom prompt (must be after oh-my-zsh to override)
+[ -f "$DOTFILES/prompt.zsh" ] && source "$DOTFILES/prompt.zsh"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
 
 # Load any local overrides (not tracked in git)
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
