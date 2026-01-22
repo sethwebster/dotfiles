@@ -107,6 +107,15 @@ if [ ! -d "$HOME/.oh-my-zsh" ]; then
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
         log_success "Oh-My-Zsh installed"
 
+        # Oh-My-Zsh overwrites ~/.zshrc - restore our symlink
+        if [ -f "$HOME_DIR/.zshrc" ] && [ ! -L "$HOME_DIR/.zshrc" ]; then
+            backup="$HOME_DIR/.zshrc.ohmyzsh.backup"
+            mv "$HOME_DIR/.zshrc" "$backup"
+            log_warning "Backed up Oh-My-Zsh .zshrc to .zshrc.ohmyzsh.backup"
+        fi
+        ln -sf "$DOTFILES_DIR/.zshrc" "$HOME_DIR/.zshrc"
+        log_success "Restored .zshrc symlink"
+
         # Install popular plugins
         PLUGIN_DIR="${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins"
         if [ ! -d "$PLUGIN_DIR/zsh-autosuggestions" ]; then

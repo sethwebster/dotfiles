@@ -486,6 +486,35 @@ if [ -f "${DOTFILES_DIR}/macos.sh" ]; then
     fi
 fi
 
+# Mackup restore (restore app settings from iCloud)
+if command -v mackup &> /dev/null; then
+    MACKUP_ICLOUD_DIR="${HOME}/Library/Mobile Documents/com~apple~CloudDocs/Mackup"
+
+    if [ -d "$MACKUP_ICLOUD_DIR" ]; then
+        echo ""
+        log_info "Mackup iCloud folder detected"
+        log_info "This will restore app settings from your previous Mac"
+        echo ""
+        read -p "Run mackup restore? (y/N) " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            log_info "Restoring app settings from iCloud..."
+            mackup restore --force
+            echo ""
+            log_success "App settings restored from iCloud"
+        else
+            log_info "Skipped mackup restore"
+            log_info "You can restore later with: mackup restore"
+        fi
+    else
+        log_warning "Mackup iCloud folder not found"
+        log_info "If this is a fresh Mac with no previous settings, ignore this"
+        log_info "If cloning from another Mac, wait for iCloud sync then run: mackup restore"
+    fi
+else
+    log_warning "Mackup not installed, skipping app settings restore"
+fi
+
 # Verify Git configuration (config was written earlier in the script)
 log_info "Verifying Git configuration..."
 if [ -f ~/.gitconfig ]; then
@@ -513,8 +542,7 @@ echo "  1. gh auth login"
 echo "  2. npx expo login"
 echo "  3. Sign into Apple ID in System Settings"
 echo "  4. Sign into Creative Cloud"
-echo "  5. Wait for iCloud to sync, then run: mackup restore"
-echo "  6. Restart your terminal or run: source ~/.zshrc"
+echo "  5. Restart your terminal or run: source ~/.zshrc"
 echo ""
 log_success "All done! Enjoy your new Mac 🎉"
 echo ""

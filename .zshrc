@@ -16,6 +16,10 @@ fi
 
 [ -f "$DOTFILES/path.zsh" ] && source "$DOTFILES/path.zsh"
 [ -f "$DOTFILES/aliases.zsh" ] && source "$DOTFILES/aliases.zsh"
+
+# Unalias git if it's set (hub wraps git but causes function definition conflicts)
+unalias git 2>/dev/null || true
+
 [ -f "$DOTFILES/functions.zsh" ] && source "$DOTFILES/functions.zsh"
 [ -f "$DOTFILES/check-updates.zsh" ] && source "$DOTFILES/check-updates.zsh"
 
@@ -35,8 +39,8 @@ if command -v fzf &>/dev/null; then
     eval "$(fzf --zsh)" 2>/dev/null
 fi
 
-# zoxide (smart cd) - check if installed
-command -v zoxide &>/dev/null && eval "$(zoxide init zsh)"
+# autojump (smart cd) - check if installed
+[ -f "$(brew --prefix)/etc/profile.d/autojump.sh" ] && . "$(brew --prefix)/etc/profile.d/autojump.sh"
 
 # Environment variables
 export EDITOR='code -w'

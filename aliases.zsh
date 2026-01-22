@@ -5,7 +5,7 @@ alias ll='eza -la --git'
 alias ls='eza'
 alias cat='bat'
 alias vim='nvim'
-alias j='z'  # zoxide smart cd (use 'j' to avoid shadowing 'cd')
+# Note: 'j' command provided by autojump (initialized in .zshrc)
 
 # Git aliases
 alias gs='git status'
