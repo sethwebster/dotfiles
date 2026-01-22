@@ -82,11 +82,11 @@ _build_prompt() {
     if [[ -n "$git_branch" ]]; then
         if _pl_git_dirty; then
             prompt+="%F{blue}${C_GIT_DIRTY_BG}${PL_SEP}"
-            prompt+="%F{black} ${ICON_BRANCH} ${git_branch} "
+            prompt+="%F{black} ${ICON_BRANCH} ${git_branch} ● "
             last_bg="yellow"
         else
             prompt+="%F{blue}${C_GIT_BG}${PL_SEP}"
-            prompt+="%F{black} ${ICON_BRANCH} ${git_branch} "
+            prompt+="%F{black} ${ICON_BRANCH} ${git_branch} ✓ "
             last_bg="green"
         fi
     fi
