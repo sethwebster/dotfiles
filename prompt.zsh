@@ -11,6 +11,7 @@ local ICON_APPLE=$'\uf179'   #
 local ICON_BRANCH=$'\ue725'  #
 local ICON_BATTERY=$'\uf240' #
 local ICON_CHARGING=$'\uf0e7' #
+local ICON_ERROR=$'\uf00d'   #
 
 # Colors (background, foreground)
 local C_RESET="%f%k"
@@ -20,6 +21,8 @@ local C_DIR_BG="%K{blue}"
 local C_DIR_FG="%F{white}"
 local C_GIT_BG="%K{green}"
 local C_GIT_DIRTY_BG="%K{yellow}"
+local C_EXIT_BG="%K{red}"
+local C_EXIT_FG="%F{white}"
 local C_BATT_BG="%K{magenta}"
 local C_BATT_FG="%F{white}"
 
@@ -64,10 +67,18 @@ _pl_battery() {
     echo "${icon} ${pct}%%"
 }
 
+# Capture exit code before it's lost
+_last_exit_code=0
+_capture_exit_code() {
+    _last_exit_code=$?
+}
+precmd_functions+=(_capture_exit_code)
+
 # Build the prompt
 _build_prompt() {
     local prompt=""
     local last_bg=""
+    local exit_code=$_last_exit_code
 
     # User segment
     prompt+="${C_USER_BG}${C_USER_FG} ${ICON_APPLE} %n "
@@ -91,6 +102,14 @@ _build_prompt() {
         fi
     fi
 
+    # Exit code segment (only on error)
+    local exit_code="$?"
+    if [[ "$exit_code" != "0" ]]; then
+        prompt+="%F{${last_bg}}${C_EXIT_BG}${PL_SEP}"
+        prompt+="${C_EXIT_FG} ${ICON_ERROR} ${exit_code} "
+        last_bg="red"
+    fi
+
     # Battery segment
     local batt="$(_pl_battery)"
     if [[ -n "$batt" ]]; then
@@ -105,5 +124,6 @@ _build_prompt() {
     echo "$prompt"
 }
 
-PROMPT='$(_build_prompt) %(?.%F{cyan}.%F{red})❯%f '
+PROMPT='$(_build_prompt)
+%(?.%F{cyan}.%F{red})❯ '
 RPROMPT=''
