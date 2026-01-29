@@ -300,7 +300,7 @@ fix-my-network() {
     # Summary
     echo ""
     echo "${BOLD}${CYAN}╔═══════════════════════════════════════════╗${RESET}"
-    echo "${BOLD}${CYAN}║${RESET}  ${BOLD}Summary${RESET}                                   ${BOLD}${CYAN}║${RESET}"
+    echo "${BOLD}${CYAN}║${RESET}  ${BOLD}Summary${RESET}                                  ${BOLD}${CYAN}║${RESET}"
     echo "${BOLD}${CYAN}╚═══════════════════════════════════════════╝${RESET}"
     echo ""
 
