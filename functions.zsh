@@ -103,7 +103,7 @@ dotfiles-update() {
 
 # Edit zsh profile and reload
 edit-profile() {
-    code ~/.zshrc --wait && source ~/.zshrc
+    $EDITOR ~/.zshrc && source ~/.zshrc
 }
 
 # Reload shell configuration
@@ -361,4 +361,340 @@ fix-my-network() {
     echo ""
     echo "${DIM}Run again with: ${BOLD}fix-my-network${RESET}"
     echo ""
+}
+
+# Port management
+ports() {
+    lsof -iTCP -sTCP:LISTEN -n -P
+}
+
+killport() {
+    if [ -z "$1" ]; then
+        echo "Usage: killport <port>"
+        return 1
+    fi
+    lsof -ti:$1 | xargs kill -9
+}
+
+# Find large files
+findlarge() {
+    find . -type f -size +${1:-100}M -exec ls -lh {} \; 2>/dev/null | awk '{print $9 ": " $5}'
+}
+
+# Git branch cleanup (delete merged branches)
+gcleanup() {
+    git branch --merged | grep -v '\*\|main\|master\|develop' | xargs -n 1 git branch -d
+}
+
+# Quick backup
+backup() {
+    cp "$1"{,.backup-$(date +%Y%m%d-%H%M%S)}
+}
+
+# Directory size
+dirsize() {
+    du -sh "${1:-.}" | sort -hr
+}
+
+# Open project in editor
+proj() {
+    cd ~/Development/${1:-.} && $EDITOR .
+}
+
+# Quick search in code
+codesearch() {
+    rg -p "$1" | less -R
+}
+
+# Interactive command menu
+use-my-mac() {
+    # Check if fzf is installed
+    if ! command -v fzf &>/dev/null; then
+        echo "Error: fzf is required but not installed"
+        echo "Install with: brew install fzf"
+        return 1
+    fi
+
+    # Build command list with categories
+    local commands=$(cat <<'EOF'
+# Navigation
+..                  → Go up one directory
+...                 → Go up two directories
+....                → Go up three directories
+-                   → Go to previous directory
+j <dir>             → Jump to directory (autojump)
+dotfiles            → Navigate to dotfiles directory
+proj <name>         → Open project in ~/Development
+
+# File Operations
+ll                  → List files (long format with git status)
+ls                  → List files
+cat <file>          → View file with syntax highlighting
+extract <file>      → Extract any archive type
+backup <file>       → Create timestamped backup
+findlarge [size]    → Find large files (default >100M)
+dirsize [path]      → Show directory sizes sorted
+cleanup             → Delete all .DS_Store files
+
+# Git - Basic
+gs                  → git status
+ga                  → git add
+gc                  → git commit
+gcm <msg>           → git commit -m
+gca                 → git commit --amend
+gcane               → git commit --amend --no-edit
+gp                  → git push
+gl                  → git pull
+gd                  → git diff
+glog                → git log (pretty graph)
+
+# Git - Branches
+gb                  → git branch
+gbd <branch>        → git branch -d (delete)
+gbD <branch>        → git branch -D (force delete)
+gco <branch>        → git checkout
+gm <branch>         → git merge
+grb <branch>        → git rebase
+grbi <ref>          → git rebase -i (interactive)
+gcleanup            → Delete all merged branches
+
+# Git - Advanced
+gf                  → git fetch
+gsh                 → git stash
+gshp                → git stash pop
+gcp <commit>        → git cherry-pick
+grh                 → git reset HEAD~
+gundo               → git reset --soft HEAD~1
+gclean              → git clean -fd
+gac <msg>           → git add . && commit -m
+ghpr                → Create GitHub PR (gh pr create --fill)
+
+# Docker
+dc                  → docker compose
+dcu                 → docker compose up
+dcd                 → docker compose down
+dcb                 → docker compose build
+dcl                 → docker compose logs
+dclf                → docker compose logs -f (follow)
+dce                 → docker compose exec
+dcr                 → docker compose restart
+dps                 → docker ps
+dpsa                → docker ps -a (all)
+di                  → docker images
+dprune              → docker system prune -af
+
+# Bun
+br <script>         → bun run
+bi                  → bun install
+ba <pkg>            → bun add
+brm <pkg>           → bun remove
+bt                  → bun test
+
+# Network
+myip                → Show public IP
+localip             → Show local IP (en0)
+ports               → Show all listening ports
+killport <port>     → Kill process on port
+fix-my-network      → Network diagnostic & repair tool
+
+# Development
+vim <file>          → nvim (neovim)
+psgrep <name>       → Find process by name
+killnamed <name>    → Kill process by name (with confirmation)
+serve [port]        → Start HTTP server (default: 8000)
+codesearch <term>   → Search code with ripgrep + pager
+
+# System
+c                   → clear
+h                   → Show last 20 history items
+path                → Show PATH entries (one per line)
+hosts               → Edit /etc/hosts
+reload-shell        → Reload zsh configuration
+edit-profile        → Edit .zshrc and reload
+zshconfig           → Open .zshrc in editor
+brewup              → brew update + upgrade + cleanup
+dotfiles-update     → Update dotfiles and Homebrew
+
+# Utilities
+mkcd <dir>          → mkdir + cd into it
+use-my-mac          → This menu!
+EOF
+)
+
+    # Use fzf to select command
+    local selected=$(echo "$commands" | \
+        grep -v '^#' | \
+        grep -v '^$' | \
+        fzf --height=80% \
+            --border=rounded \
+            --prompt="🔍 Search commands: " \
+            --header="↑↓ navigate • enter: copy • ctrl-e: execute • esc: quit" \
+            --preview='echo {}' \
+            --preview-window=up:3:wrap \
+            --bind='ctrl-e:execute-silent(echo {} | cut -d" " -f1 | pbcopy)+abort' \
+            --color='header:italic:cyan,prompt:bold:blue,pointer:bold:magenta')
+
+    if [ -n "$selected" ]; then
+        # Extract command (before the arrow)
+        local cmd=$(echo "$selected" | awk '{print $1}')
+
+        # Copy to clipboard
+        echo -n "$cmd" | pbcopy
+
+        echo ""
+        echo "✓ Copied to clipboard: $cmd"
+        echo ""
+
+        # Ask if user wants to execute
+        read -p "Execute now? (y/N) " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            # Check if it needs arguments
+            if echo "$selected" | grep -q '<.*>'; then
+                echo "Command requires arguments. Paste and complete:"
+                print -z "$cmd "
+            else
+                eval "$cmd"
+            fi
+        fi
+    fi
+}
+
+# AI development best practices CLI
+ai() {
+    local cmd="$1"
+    shift
+
+    case "$cmd" in
+        init)
+            # ASCII Art: Robot peeking through opening door
+            cat << 'EOF'
+
+            ╔═══════════════════════════════════════════════════════╗
+            ║                                                       ║
+            ║    ┌────────┐                                        ║
+            ║    │        │                    ___                 ║
+            ║    │   ∥    │                   /   \                ║
+            ║    │   ∥    │     👋           | o o |               ║
+            ║    │   ∥    │                   \___/                ║
+            ║    │   ∥   /│                    |||                 ║
+            ║    │   ∥  / │                   /   \                ║
+            ║    │   ∥ /  │                  |  ⚙  |               ║
+            ║    │   ∥/   │                   \___/                ║
+            ║    │   /    │                  //   \\               ║
+            ║    │  /     │                 //     \\              ║
+            ║    │ /      │                                        ║
+            ║    │/       │          "Hello, Developer!"          ║
+            ║    └────────┘                                        ║
+            ║     [DOOR]              [FRIENDLY AI ROBOT]          ║
+            ║                                                       ║
+            ╚═══════════════════════════════════════════════════════╝
+
+EOF
+            echo "🤖 Initializing directory with AI development best practices..."
+            echo ""
+
+            # Check if AGENTS.md already exists
+            if [ -f "AGENTS.md" ]; then
+                echo "⚠️  AGENTS.md already exists in this directory"
+                read -p "Overwrite? (y/N) " -n 1 -r
+                echo ""
+                if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                    echo "❌ Cancelled"
+                    return 1
+                fi
+            fi
+
+            # Download AGENTS.md from GitHub
+            echo "📥 Downloading AGENTS.md from github.com/sethwebster/AI..."
+            if curl -fsSL "https://raw.githubusercontent.com/sethwebster/AI/main/AGENTS.md" -o "AGENTS.md"; then
+                echo "✅ AGENTS.md initialized successfully"
+
+                # Create symlink from CLAUDE.md to AGENTS.md
+                if [ -e "CLAUDE.md" ] && [ ! -L "CLAUDE.md" ]; then
+                    echo "⚠️  CLAUDE.md exists and is not a symlink"
+                    read -p "Replace with symlink to AGENTS.md? (y/N) " -n 1 -r
+                    echo ""
+                    if [[ $REPLY =~ ^[Yy]$ ]]; then
+                        rm "CLAUDE.md"
+                        ln -s "AGENTS.md" "CLAUDE.md"
+                        echo "🔗 Created symlink: CLAUDE.md -> AGENTS.md"
+                    fi
+                elif [ -L "CLAUDE.md" ]; then
+                    echo "ℹ️  CLAUDE.md symlink already exists"
+                else
+                    ln -s "AGENTS.md" "CLAUDE.md"
+                    echo "🔗 Created symlink: CLAUDE.md -> AGENTS.md"
+                fi
+
+                echo ""
+                echo "📖 Review the best practices: cat AGENTS.md"
+                echo "🔗 Source: https://github.com/sethwebster/AI"
+            else
+                echo "❌ Failed to download AGENTS.md"
+                echo "   Check network connection or repository availability"
+                return 1
+            fi
+            ;;
+
+        *)
+            echo "AI Development Best Practices CLI"
+            echo ""
+            echo "Usage:"
+            echo "  ai init    - Initialize directory with AGENTS.md from github.com/sethwebster/AI"
+            echo ""
+            echo "More commands coming soon..."
+            return 1
+            ;;
+    esac
+}
+
+# Port Find - Find process by port number
+portfind() {
+    if [ -z "$1" ]; then
+        echo "Usage: portfind <port>"
+        echo "Example: portfind 3000"
+        return 1
+    fi
+
+    local PORT="$1"
+
+    # Find processes using the port
+    local RESULTS=$(lsof -i :$PORT 2>/dev/null)
+
+    if [ -z "$RESULTS" ]; then
+        echo "No process found on port $PORT"
+        return 1
+    fi
+
+    echo "$RESULTS"
+}
+
+# Port Kill - Kill process by port number
+portkill() {
+    if [ -z "$1" ]; then
+        echo "Usage: portkill <port>"
+        echo "Example: portkill 3000"
+        return 1
+    fi
+
+    local PORT="$1"
+
+    # Find PIDs using the port
+    local PIDS=$(lsof -ti :$PORT 2>/dev/null)
+
+    if [ -z "$PIDS" ]; then
+        echo "No process found on port $PORT"
+        return 1
+    fi
+
+    echo "Killing process(es) on port $PORT..."
+    echo "$PIDS" | xargs kill -9 2>/dev/null
+
+    if [ $? -eq 0 ]; then
+        echo "✅ Process(es) killed: $PIDS"
+    else
+        echo "❌ Failed to kill process(es)"
+        return 1
+    fi
 }
