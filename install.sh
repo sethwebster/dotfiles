@@ -25,6 +25,7 @@ files=(
     ".zshrc"
     ".tool-versions"
     ".mackup.cfg"
+    ".nanorc"
     "path.zsh"
     "aliases.zsh"
     "functions.zsh"

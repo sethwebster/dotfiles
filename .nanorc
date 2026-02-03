@@ -1,0 +1,36 @@
+## Syntax highlighting
+include "/opt/homebrew/share/nano/*.nanorc"
+include "/opt/homebrew/share/nano/extra/*.nanorc"
+
+## General settings
+set tabsize 2
+set tabstospaces
+set linenumbers
+set softwrap
+set mouse
+set autoindent
+set indicator
+set bookstyle
+set matchbrackets "(<[{)>]}"
+
+## Key bindings
+bind ^Q exit all
+bind ^S savefile main
+bind ^W writeout main
+bind ^O insert main
+bind ^H help all
+bind ^Z suspend main
+bind ^C copy main
+bind ^X cut main
+bind ^V paste all
+bind ^P location main
+
+## Color scheme for interface
+set titlecolor bold,white,blue
+set statuscolor bold,white,green
+set errorcolor bold,white,red
+set selectedcolor bold,white,magenta
+set stripecolor ,yellow
+set numbercolor cyan
+set keycolor cyan
+set functioncolor green
