@@ -459,6 +459,22 @@ else
     log_success "Bun already installed"
 fi
 
+# Install global npm packages
+if command -v npm &> /dev/null; then
+    log_info "Installing global npm packages..."
+
+    # Check if ai-cli is already installed
+    if ! npm list -g @sethwebster/ai-cli &> /dev/null; then
+        log_info "Installing @sethwebster/ai-cli..."
+        npm install -g @sethwebster/ai-cli
+        log_success "@sethwebster/ai-cli installed"
+    else
+        log_success "@sethwebster/ai-cli already installed"
+    fi
+else
+    log_warning "npm not found, skipping global packages (install Node.js first)"
+fi
+
 # Configure macOS defaults
 if [ -f "${DOTFILES_DIR}/macos.sh" ]; then
     if [ -f ~/.macos-defaults-applied ]; then
