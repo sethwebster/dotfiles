@@ -1,0 +1,98 @@
+@import "@fontsource/space-grotesk/400.css";
+@import "@fontsource/space-grotesk/600.css";
+@import "@fontsource/space-grotesk/700.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  color-scheme: dark;
+  font-family: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --bg-0: #0b0b10;
+  --bg-1: #0e1624;
+  --bg-2: #101d2f;
+  --ink-0: #f5f7ff;
+  --ink-1: #c8d2ff;
+  --ink-2: #9aa6cf;
+  --accent-0: #7c9bff;
+  --accent-1: #7dffd8;
+  --accent-2: #ffd38a;
+  --line-0: rgba(255, 255, 255, 0.08);
+  --line-1: rgba(124, 155, 255, 0.4);
+  --glow-0: rgba(124, 155, 255, 0.28);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink-0);
+  background:
+    radial-gradient(1200px 600px at 8% -10%, rgba(124, 155, 255, 0.35), transparent 60%),
+    radial-gradient(900px 500px at 80% 10%, rgba(125, 255, 216, 0.2), transparent 65%),
+    radial-gradient(700px 400px at 50% 70%, rgba(255, 211, 138, 0.16), transparent 60%),
+    linear-gradient(165deg, var(--bg-2), var(--bg-0) 55%, #09090f 100%);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+code,
+kbd,
+pre,
+.font-mono {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+::selection {
+  background: rgba(124, 155, 255, 0.35);
+  color: var(--ink-0);
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+    opacity: 0.4;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+.animate-accordion-down {
+  animation: accordion-down 0.2s ease-out forwards;
+}
+
+.animate-accordion-up {
+  animation: accordion-up 0.2s ease-out forwards;
+}

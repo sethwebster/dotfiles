@@ -1,0 +1,54 @@
+import { Badge, Callout, InlineCode, Kbd } from '../components/mdx-components'
+
+<div className="space-y-10">
+  <div className="space-y-4">
+    <Badge>Dotfiles in motion</Badge>
+    <h2 className="text-3xl font-semibold text-white">
+      Build a dotfiles hub that feels alive.
+    </h2>
+    <p className="text-base text-[color:var(--ink-2)]">
+      This landing page reads like GitHub-quality product pages, but
+      ships as a static SPA for dotfiles. MDX lets you blend content and
+      components without leaving Markdown.
+    </p>
+  </div>
+
+  <div className="grid gap-4 md:grid-cols-2">
+    <Callout title="Principle" tone="accent">
+      Guide visitors from zero context to confident action. Every block
+      answers “what is this?” and “what do I do next?”
+    </Callout>
+    <Callout title="Workflow">
+      Update content in MDX, compose layouts in React, and ship a single
+      static build compatible with GitHub Pages.
+    </Callout>
+  </div>
+
+  <div className="space-y-3">
+    <h3 className="text-xl font-semibold text-white">Quick start flow</h3>
+    <ul className="space-y-2 text-sm text-[color:var(--ink-2)]">
+      <li className="flex items-start gap-3">
+        <span className="mt-1 h-2 w-2 rounded-full bg-[color:var(--accent-0)]" />
+        Content lives in <InlineCode>src/content</InlineCode>, including
+        MDX and asset references.
+      </li>
+      <li className="flex items-start gap-3">
+        <span className="mt-1 h-2 w-2 rounded-full bg-[color:var(--accent-1)]" />
+        React layout imports MDX as components.
+      </li>
+      <li className="flex items-start gap-3">
+        <span className="mt-1 h-2 w-2 rounded-full bg-[color:var(--accent-2)]" />
+        Build once, deploy to <InlineCode>gh-pages</InlineCode>.
+      </li>
+    </ul>
+  </div>
+
+  <div className="space-y-4">
+    <h3 className="text-xl font-semibold text-white">Commands you’ll use</h3>
+    <div className="flex flex-wrap gap-2 text-sm text-[color:var(--ink-2)]">
+      <Kbd>bun install</Kbd>
+      <Kbd>bun run dev</Kbd>
+      <Kbd>bun run build</Kbd>
+    </div>
+  </div>
+</div>
