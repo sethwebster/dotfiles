@@ -163,11 +163,16 @@ if ! xcode-select -p &> /dev/null; then
 else
     log_success "Xcode Command Line Tools installed"
 
-    # Accept Xcode license if needed
-    if ! sudo xcodebuild -license check &> /dev/null; then
-        log_info "Accepting Xcode license agreement..."
-        sudo xcodebuild -license accept
-        log_success "Xcode license accepted"
+    # xcodebuild is unavailable on Command Line Tools-only installs.
+    # Only run license acceptance when full Xcode is installed.
+    if [ -d "/Applications/Xcode.app" ]; then
+        if ! sudo xcodebuild -license check &> /dev/null; then
+            log_info "Accepting Xcode license agreement..."
+            sudo xcodebuild -license accept
+            log_success "Xcode license accepted"
+        fi
+    else
+        log_info "Full Xcode not detected; skipping Xcode license acceptance (CLT-only is OK)"
     fi
 
     # Now that Xcode is installed, write git config if we collected it earlier but couldn't write
