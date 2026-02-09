@@ -698,3 +698,39 @@ portkill() {
         return 1
     fi
 }
+
+# Reset a tart VM by deleting it and re-cloning from tahoe-base
+# Usage: tart-reset <vm-name> [--run]
+tart-reset() {
+    local vm_name="$1"
+    local run_after=false
+
+    if [ -z "$vm_name" ]; then
+        echo "Usage: tart-reset <vm-name> [--run]"
+        return 1
+    fi
+
+    shift
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --run) run_after=true ;;
+            *) echo "Unknown flag: $1"; return 1 ;;
+        esac
+        shift
+    done
+
+    if tart list | grep -q "^$vm_name "; then
+        echo "Deleting existing VM '$vm_name'..."
+        tart delete "$vm_name"
+    fi
+
+    echo "Cloning tahoe-base -> $vm_name..."
+    tart clone tahoe-base "$vm_name" || { echo "Clone failed"; return 1; }
+
+    echo "VM '$vm_name' ready."
+
+    if $run_after; then
+        echo "Starting '$vm_name'..."
+        tart run "$vm_name"
+    fi
+}

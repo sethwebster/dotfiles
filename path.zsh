@@ -11,8 +11,5 @@ fi
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-# Node/NPM Global
-export PATH="$HOME/.npm-global/bin:$PATH"
-
 # Add local bin
 export PATH="$HOME/.local/bin:$PATH"
