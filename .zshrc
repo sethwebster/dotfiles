@@ -401,3 +401,6 @@ EOF
 			;;
 	esac
 }
+
+# OpenClaw Completion
+source "/Users/sethwebster/.openclaw/completions/openclaw.zsh"
