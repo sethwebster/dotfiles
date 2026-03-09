@@ -1,6 +1,6 @@
 # Agent Workspace Instructions
 
-**This file contains workspace-specific context and information for AI agents working in this repository.**
+**This file contains workspace-specific context for AI agents working in this repository.**
 
 ## Quick Start
 
@@ -8,176 +8,171 @@ When you start working in this workspace:
 
 1. Read the general guidelines in [AGENTS.md](./AGENTS.md)
 2. Read this file for workspace-specific context
-3. Check for any active ADRs in `adr/` directory
-4. Review recent commits to understand current work
+3. Review recent commits to understand current work
 
 ## Workspace Context
 
 ### Repository Information
 
-- **Repository**: AI CLI + agent guidelines + docs site
-- **Primary Language**: Bash (CLI), JavaScript/TypeScript (installer + landing page)
-- **Framework**: Next.js (landing page in `landing-page/`)
-- **Package Manager**: npm
+- **Repository**: Personal macOS dotfiles — intelligent environment automation for macOS
+- **Primary Language**: Bash (all core scripts), ZSH (shell config)
+- **Package Manager**: Homebrew (apps/tools), asdf (language runtimes)
+- **Purpose**: Clone a complete Mac development environment in ~15 minutes with zero manual steps
 
-### Key Directories
+### Key Files
 
 ```
-.
-├── agents/           # Agent definition markdown files
-├── bin/              # npm installer script
-├── landing-page/     # Next.js documentation site (MDX)
-├── migrations/       # CLI migration scripts
-├── ai-function.sh    # Shell function that powers `ai` CLI
-└── install.sh        # Curl-based installer
+dotfiles/
+├── bootstrap.sh          # Main orchestrator — run this on a fresh Mac
+├── install.sh            # Symlink manager (idempotent)
+├── auth-setup.sh         # Guided GitHub/Expo/SSH authentication
+├── prepare-sync.sh       # Capture current Mac state before cloning
+├── macos.sh              # macOS system preferences automation
+├── Brewfile              # All Homebrew formulas, casks, and mas apps
+├── docker-compose.yml    # Local dev databases (PostgreSQL + Redis)
+│
+├── .zshrc                # ZSH entry point — sources all modules
+├── path.zsh              # PATH configuration
+├── aliases.zsh           # Shell aliases (gs, ga, gc, ll, dc, etc.)
+├── functions.zsh         # Custom functions (mkcd, extract, portkill, etc.)
+├── check-updates.zsh     # 24-hour update check (non-blocking)
+│
+├── .gitconfig            # Git configuration and aliases
+├── .tool-versions        # asdf version pins (Node, Python)
+├── .mackup.cfg           # App settings sync via iCloud
+│
+├── DECISIONS.md          # Architecture decision records
+├── CHANGELOG.md          # Version history
+├── SECURITY.md           # Security practices
+└── MACKUP.md             # Mackup deep dive
 ```
 
 ### Development Commands
 
 ```bash
-# Install CLI package deps (root)
-npm install
+# Fresh Mac setup
+./bootstrap.sh
 
-# Run landing page dev server
-cd landing-page
-npm install
-npm run dev
+# Re-symlink dotfiles only (safe to re-run)
+./install.sh
 
-# Lint landing page
-cd landing-page
-npm run lint
+# Apply macOS system preferences
+./macos.sh
 
-# Build landing page
-cd landing-page
-npm run build
+# Guided auth setup (GitHub CLI, Expo, SSH)
+./auth-setup.sh
+
+# Capture current Mac state + push to GitHub
+./prepare-sync.sh
+
+# Update dotfiles + Homebrew
+dotfiles-update
+
+# Start local dev databases
+cd ~/dotfiles && docker compose up -d
 ```
 
-## ⚠️ CRITICAL: Migration Requirements
+## Critical Invariants
 
-**UNBREACHABLE CONSTRAINT**: When making changes that affect installed agents or configurations, you MUST create a migration before committing/pushing.
+### All Scripts Must Be Idempotent
 
-### Migration Rules
+**UNBREACHABLE CONSTRAINT**: Every script must be safe to run multiple times with the same result.
 
-Every migration MUST implement:
-1. **`migration_up()`** - Apply the change (idempotent)
-2. **`migration_down()`** - Reverse the change (idempotent)
-3. **Idempotence** - Running up/down multiple times has same effect as once
-
-### Migration Workflow
-
-1. Make your changes to the codebase
-2. Create migration file: `migrations/XXX_description.sh`
-3. Implement `migration_up()` and `migration_down()`
-4. Test both directions:
-   ```bash
-   ai migrate up
-   ai migrate down
-   ai migrate up
-   ```
-5. Verify idempotence (run each direction twice)
-6. Only then commit and push
-
-### Migration File Template
+- Check before acting — skip if already done
+- Never overwrite without backing up (`*.backup.YYYYMMDD_HHMMSS`)
+- Use flags (e.g., `~/.macos-defaults-applied`) for one-time operations
 
 ```bash
-#!/bin/bash
-# Migration: XXX
-# Description: Brief description
-# Version: X.Y.Z
-# Date: YYYY-MM-DD
+# ✅ CORRECT - Check before acting
+if [ -L "$target" ] && [ "$(readlink "$target")" = "$source" ]; then
+  log_success "$file already linked"
+  continue
+fi
 
-migration_up() {
-	# Check before acting (idempotent)
-	if [ condition ]; then
-		# Apply change
-	fi
-}
-
-migration_down() {
-	# Check before acting (idempotent)
-	if [ condition ]; then
-		# Reverse change
-	fi
-}
+# ❌ WRONG - Blindly overwrite
+ln -sf "$source" "$target"
 ```
 
-### When to Create Migrations
+### Smart App Detection Pattern
 
-- Renaming installed agents/skills
-- Moving configuration files
-- Changing file/directory structures users have
-- Updating installed agent frontmatter
-- Any change that affects user installations
+Bootstrap scans `/Applications` before `brew bundle` to avoid adoption errors. Any changes to Brewfile cask additions must maintain a corresponding entry in the cask-to-app-name mapping table in `bootstrap.sh`.
 
-### When NOT to Create Migrations
+```bash
+# Mapping format: cask-name → App Bundle Name
+if [ -d "/Applications/Docker.app" ]; then
+  # Exclude docker from filtered Brewfile
+fi
+```
 
-- Adding new features (users opt-in via `ai install agents`)
-- Documentation updates
-- Internal refactoring that doesn't affect installations
+### No Secrets in Repo
 
----
+- Never commit credentials, tokens, API keys, or SSH private keys
+- Machine-specific secrets → `~/.zshrc.local` (gitignored)
+- `install.sh` symlinks tracked dotfiles only
 
 ## Project-Specific Guidelines
 
 ### Tech Stack
 
-- **Frontend**: Next.js App Router + MDX (`landing-page/`)
-- **Backend**: None (CLI + static docs)
-- **Database**: None
-- **Caching**: None
-- **Testing**: No automated test suite in repo; landing page uses ESLint
+- **Shell**: ZSH with modular config (`.zshrc` sources `path.zsh`, `aliases.zsh`, `functions.zsh`, `check-updates.zsh`)
+- **Package management**: Homebrew for system packages/apps, asdf for language runtimes
+- **Settings sync**: Mackup via iCloud
+- **Local databases**: Docker Compose (PostgreSQL port 5432, Redis port 6379)
+- **No frontend, no backend, no database schema** — this is shell infrastructure only
 
 ### Environment Setup
 
-Required environment variables:
-- None documented in repo
+No environment variables required to work in this repo. Machine-specific vars go in `~/.zshrc.local`.
 
 ### Testing Strategy
 
-- Unit tests: None
-- Integration tests: None
-- E2E tests: None
+- No automated test suite
+- Idempotency is the primary correctness guarantee — test by running scripts twice
+- Validate by running on a fresh macOS environment (Multipass VM or actual new Mac)
 
-### Deployment
+### Editing Shell Files
 
-- **Staging**: Not documented
-- **Production**: Not documented (landing page is a standard Next.js app)
-- **CI/CD**: Not documented
+- `aliases.zsh` — add aliases here (short command shortcuts)
+- `functions.zsh` — add functions here (multi-line logic)
+- `path.zsh` — add PATH entries here only
+- `check-updates.zsh` — do not modify unless changing update check behavior
+- `.zshrc` — orchestrator only; sources modules, sets environment vars, configures plugins
+
+### Adding to Brewfile
+
+```ruby
+# Formula (CLI tool)
+brew "tool-name"
+
+# Cask (GUI app)
+cask "app-name"
+
+# Mac App Store
+mas "App Name", id: 123456789
+```
+
+After adding a cask, add the app-bundle mapping to `bootstrap.sh`'s detection block.
+
+### Symlinked Files
+
+Files symlinked by `install.sh` to `~/`:
+- `.zshrc`, `path.zsh`, `aliases.zsh`, `functions.zsh`, `check-updates.zsh`
+- `.tool-versions`, `.mackup.cfg`, `.nanorc`
+
+To add a new symlinked file: add filename to the `files` array in `install.sh`.
+
+## Common Pitfalls
+
+- **Don't use `brew bundle --force`** — bootstrap's app detection exists to avoid this
+- **Don't edit `.zshrc` for new commands** — put aliases in `aliases.zsh`, functions in `functions.zsh`
+- **Don't hardcode paths** — use `$HOME`, `$DOTFILES_DIR`, etc.
+- **Don't skip the idempotency check** — running twice must produce same result
+- **Don't commit `~/.zshrc.local`** — it's gitignored for a reason (machine-specific secrets)
 
 ## Current Work
 
-### Active Features
-
-- None noted in repo
-
-### Known Issues
-
-- None documented
-
-### Upcoming Work
-
-- None documented
-
-## Important Patterns
-
-### CLI Version Sync
-
-Keep versions synchronized across:
-- `package.json` version
-- `ai-function.sh` `AI_VERSION`
-- Git tag `vX.Y.Z` (see `PUBLISHING.md`)
-
-### Migrations For Installed Changes
-
-Any change that affects installed agents/skills or configuration requires a migration in `migrations/` (see `migrations/README.md`). Always implement idempotent `migration_up()` and `migration_down()` and test both directions.
-
-## Troubleshooting
-
-### Common Issues
-
-**Issue**: [Common problem]
-**Solution**: [How to fix it]
+Check `git log --oneline -10` for recent changes. No standing active features.
 
 ---
 
-**Note**: Keep this file updated as the project evolves. This is your workspace's living documentation.
+**Note**: Keep this file updated as the project evolves.
