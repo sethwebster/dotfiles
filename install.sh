@@ -132,4 +132,19 @@ else
     log_success "Oh-My-Zsh already installed"
 fi
 
+# Remove stale tabtab completion blocks from .zshrc
+ZSHRC="$DOTFILES_DIR/.zshrc"
+if grep -q "tabtab source" "$ZSHRC" 2>/dev/null; then
+    # Find each sourced tabtab completion path and remove the block if the file doesn't exist
+    while IFS= read -r line; do
+        path=$(echo "$line" | grep -oE '\[\[ -f [^ ]+' | sed 's/\[\[ -f //')
+        if [ -n "$path" ] && [ ! -f "$path" ]; then
+            pkg=$(echo "$line" | grep -oE 'tabtab source for \S+' | awk '{print $4}')
+            log_warning "Removing stale tabtab completion for: $pkg"
+            sed -i '' "/# tabtab source for $pkg/,/tabtab.*$pkg/d" "$ZSHRC"
+        fi
+    done < <(grep "tabtab source for" "$ZSHRC")
+    log_success "Tabtab completions cleaned"
+fi
+
 log_success "Dotfiles installation complete!"
