@@ -69,7 +69,7 @@ brew "protobuf"
 brew "mosh"
 brew "mozjpeg"
 brew "nano"
-brew "node@22", link: true
+brew "node@22"
 brew "ollama"
 brew "open-mpi"
 brew "openslide"
@@ -137,16 +137,12 @@ mas "Bear", id: 1091189122
 mas "Draw Things", id: 6444050820
 mas "Fantastical", id: 975937182
 mas "GarageBand", id: 682658836
-mas "Googly Eyes", id: 6743048714
 mas "iMovie", id: 408981434
 mas "Keynote", id: 409183694
-mas "Keynote", id: 361285480
-mas "KeyPad", id: 0
 mas "Kindle", id: 302584613
 mas "Logic Pro", id: 634148309
 mas "Numbers", id: 409203825
 mas "Pages", id: 409201541
-mas "Pages", id: 361309726
 mas "Prime Video", id: 545519333
 mas "SiteSucker", id: 442168834
 mas "TestFlight", id: 899247664

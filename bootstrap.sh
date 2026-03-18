@@ -360,6 +360,11 @@ if [ -f "${DOTFILES_DIR}/Brewfile" ]; then
     # Note: brew bundle can hang on parallel downloads. If stuck for >5min, Ctrl+C and re-run
     brew bundle --file="$TEMP_BREWFILE" --no-upgrade --verbose
 
+    # node@22 is keg-only; force-link to resolve any npm file conflicts
+    if brew list node@22 &>/dev/null; then
+        brew link --overwrite node@22 2>/dev/null && log_success "node@22 linked" || log_warning "node@22 link failed (may need manual: brew link --overwrite node@22)"
+    fi
+
     echo ""
 
     # Kill sudo keepalive
