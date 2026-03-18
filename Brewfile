@@ -131,6 +131,7 @@ cask "notion"
 cask "openscad"
 cask "postman"
 cask "visual-studio-code"
+cask "tailscale"
 cask "warp"
 mas "Amphetamine", id: 937984704
 mas "Bear", id: 1091189122

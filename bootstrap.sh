@@ -311,6 +311,7 @@ if [ -f "${DOTFILES_DIR}/Brewfile" ]; then
                 spotify) app_name="Spotify" ;;
                 vlc) app_name="VLC" ;;
                 iterm2) app_name="iTerm" ;;
+                tailscale) app_name="Tailscale" ;;
                 warp) app_name="Warp" ;;
                 postman) app_name="Postman" ;;
                 pgadmin4) app_name="pgAdmin 4" ;;
