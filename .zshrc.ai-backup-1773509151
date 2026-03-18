@@ -1249,8 +1249,8 @@ ai() {
 					SELECTED_SKILLS=("${AVAILABLE_SKILLS[@]}")
 				else
 					for num in $SKILL_SELECTION; do
-						local sidx=$((num))  # zsh arrays are 1-indexed
-						if [ "$sidx" -ge 1 ] && [ "$sidx" -le "${#AVAILABLE_SKILLS[@]}" ]; then
+						local sidx=$((num - 1))
+						if [ "$sidx" -ge 0 ] && [ "$sidx" -lt "${#AVAILABLE_SKILLS[@]}" ]; then
 							SELECTED_SKILLS+=("${AVAILABLE_SKILLS[$sidx]}")
 						else
 							_ai_warn "Invalid selection: $num"
