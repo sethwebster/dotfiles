@@ -30,7 +30,36 @@ log_warning "This script will guide you through authenticating various services.
 log_warning "Some steps require manual intervention."
 echo ""
 
-# GitHub CLI
+# ==============================================================================
+# 1. SSH KEY (first — needed for GitHub SSH auth)
+# ==============================================================================
+echo ""
+log_info "SSH Key Setup"
+if [ -f ~/.ssh/id_ed25519.pub ]; then
+    log_success "SSH key already exists"
+    echo ""
+    echo "Your public key:"
+    cat ~/.ssh/id_ed25519.pub
+    echo ""
+else
+    read -p "Generate new SSH key? (y/n) " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        read -p "Enter your email: " ssh_email
+        ssh-keygen -t ed25519 -C "$ssh_email" -f ~/.ssh/id_ed25519 -N ""
+        eval "$(ssh-agent -s)"
+        ssh-add --apple-use-keychain ~/.ssh/id_ed25519
+        log_success "SSH key generated"
+        echo ""
+        echo "Your public key:"
+        cat ~/.ssh/id_ed25519.pub
+        echo ""
+    fi
+fi
+
+# ==============================================================================
+# 2. GITHUB CLI (second — lets us upload SSH key right after)
+# ==============================================================================
 if command -v gh &> /dev/null; then
     echo ""
     log_info "GitHub CLI Authentication"
@@ -44,11 +73,53 @@ if command -v gh &> /dev/null; then
             log_success "GitHub authenticated"
         fi
     fi
+
+    # Upload SSH key to GitHub if we have one and are authenticated
+    if [ -f ~/.ssh/id_ed25519.pub ] && gh auth status &> /dev/null; then
+        # Check if key is already on GitHub
+        key_content=$(cat ~/.ssh/id_ed25519.pub | awk '{print $2}')
+        if gh ssh-key list 2>/dev/null | grep -q "$key_content"; then
+            log_success "SSH key already on GitHub"
+        else
+            read -p "Upload SSH key to GitHub? (y/n) " -n 1 -r
+            echo ""
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                default_title="$(scutil --get ComputerName 2>/dev/null || hostname)"
+                read -p "Key title [$default_title]: " key_title
+                key_title="${key_title:-$default_title}"
+                gh ssh-key add ~/.ssh/id_ed25519.pub --title "$key_title"
+                log_success "SSH key uploaded to GitHub"
+            fi
+        fi
+    fi
 else
     log_warning "GitHub CLI not installed. Run bootstrap.sh first."
 fi
 
-# Expo
+# ==============================================================================
+# 3. DOCKER
+# ==============================================================================
+if command -v docker &> /dev/null; then
+    echo ""
+    log_info "Docker"
+    if ! docker info &> /dev/null; then
+        log_warning "Docker Desktop is not running — start it, then re-run this script"
+    else
+        log_success "Docker is running"
+        read -p "Log in to Docker Hub? (y/n) " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            docker login
+            log_success "Docker Hub authenticated"
+        fi
+    fi
+else
+    log_warning "Docker not installed. Run bootstrap.sh first."
+fi
+
+# ==============================================================================
+# 4. EXPO
+# ==============================================================================
 if command -v npx &> /dev/null; then
     echo ""
     log_info "Expo Authentication"
@@ -62,88 +133,9 @@ else
     log_warning "Node/npx not available. Install Node first."
 fi
 
-# Docker
-if command -v docker &> /dev/null; then
-    echo ""
-    log_info "Docker Authentication"
-    if docker info &> /dev/null; then
-        log_success "Docker is running"
-    else
-        log_warning "Docker is not running. Start Docker Desktop manually."
-    fi
-else
-    log_warning "Docker not installed. Run bootstrap.sh first."
-fi
-
-# SSH Key Generation
-echo ""
-log_info "SSH Key Setup"
-if [ -f ~/.ssh/id_ed25519.pub ]; then
-    log_success "SSH key already exists"
-    echo ""
-    echo "Your public key:"
-    cat ~/.ssh/id_ed25519.pub
-    echo ""
-
-    # Offer to upload existing key to GitHub
-    if command -v gh &> /dev/null && gh auth status &> /dev/null; then
-        read -p "Upload SSH key to GitHub? (y/n) " -n 1 -r
-        echo ""
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            read -p "Enter title for this key (e.g., 'MacBook Pro'): " key_title
-            gh ssh-key add ~/.ssh/id_ed25519.pub --title "$key_title"
-            log_success "SSH key uploaded to GitHub"
-        fi
-    else
-        log_info "Add this to GitHub manually: https://github.com/settings/keys"
-    fi
-else
-    read -p "Generate new SSH key? (y/n) " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        read -p "Enter your email: " email
-        ssh-keygen -t ed25519 -C "$email" -f ~/.ssh/id_ed25519
-        eval "$(ssh-agent -s)"
-        ssh-add ~/.ssh/id_ed25519
-        log_success "SSH key generated"
-        echo ""
-        echo "Your public key:"
-        cat ~/.ssh/id_ed25519.pub
-        echo ""
-
-        # Auto-upload to GitHub if authenticated
-        if command -v gh &> /dev/null && gh auth status &> /dev/null; then
-            read -p "Upload SSH key to GitHub? (y/n) " -n 1 -r
-            echo ""
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                read -p "Enter title for this key (e.g., 'MacBook Pro'): " key_title
-                gh ssh-key add ~/.ssh/id_ed25519.pub --title "$key_title"
-                log_success "SSH key uploaded to GitHub"
-            fi
-        else
-            log_info "Add this to GitHub manually: https://github.com/settings/keys"
-        fi
-    fi
-fi
-
-# Git config
-echo ""
-log_info "Git Configuration"
-current_name=$(git config --global user.name 2>/dev/null || echo "")
-current_email=$(git config --global user.email 2>/dev/null || echo "")
-
-if [ -z "$current_name" ] || [ -z "$current_email" ]; then
-    log_warning "Git user not configured"
-    read -p "Enter your full name: " name
-    read -p "Enter your email: " email
-    git config --global user.name "$name"
-    git config --global user.email "$email"
-    log_success "Git configured"
-else
-    log_success "Git already configured as: $current_name <$current_email>"
-fi
-
+# ==============================================================================
 # Manual steps reminder
+# ==============================================================================
 echo ""
 log_info "=============================="
 log_info "Manual Steps Remaining"
@@ -152,7 +144,7 @@ echo ""
 log_warning "Please complete these manually:"
 echo "  1. Sign into Apple ID (System Settings > Apple ID)"
 echo "  2. Sign into Adobe Creative Cloud"
-echo "  3. Configure any app-specific settings"
+echo "  3. Sign into Tailscale"
 echo "  4. Import browser bookmarks/settings"
 echo ""
 log_success "Authentication setup complete!"
